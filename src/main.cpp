@@ -6,16 +6,27 @@
 #include "argparse.hpp"
 
 int main(int argc, char* argv[]) {
-    std::map<std::string, std::string> arguments = saveCommandLineArguments(argc, argv);
-
-    // Print the saved arguments
-    std::ofstream file("arguments.txt", std::ios::app); // Initialize the file directly
-    for (const auto& argument : arguments) {
-        std::cout << argument.first << " = " << argument.second << std::endl;
-        //write the arguments to a file
-        file << argument.first << " = " << argument.second << std::endl;
+    resamplerArgs args = parseArguments(argc, argv);
+    // write args to cout
+    std::cout << "Input path: " << args.inputPath << std::endl;
+    std::cout << "Output path: " << args.outputPath << std::endl;
+    std::cout << "Pitch: " << args.pitch << std::endl;
+    std::cout << "Velocity: " << args.velocity << std::endl;
+    std::cout << "Flags: " << std::endl;
+    for (auto const& flag : args.flags) {
+        std::cout << flag.first << ": " << flag.second << std::endl;
     }
-    file.close();
-
+    std::cout << "Offset: " << args.offset << std::endl;
+    std::cout << "Length: " << args.length << std::endl;
+    std::cout << "Consonant: " << args.consonant << std::endl;
+    std::cout << "Cutoff: " << args.cutoff << std::endl;
+    std::cout << "Volume: " << args.volume << std::endl;
+    std::cout << "Modulation: " << args.modulation << std::endl;
+    std::cout << "Tempo: " << args.tempo << std::endl;
+    std::cout << "Pitch bend: " << std::endl;
+    for (int i = 0; i < args.pitchBend.size(); i++) {
+        std::cout << args.pitchBend[i] << " ";
+    }
+    std::cout << std::endl;
     return 0;
 }

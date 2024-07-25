@@ -1,0 +1,118 @@
+expressions:
+  lovl:
+    name: loop overlap
+    abbr: lovl
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 48
+    is_flag: true
+    flag: lovl
+  loff:
+    name: loop offset
+    abbr: loff
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: loff
+  pstb:
+    name: pitch stability
+    abbr: pstb
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: pstb
+  std:
+    name: steadiness
+    abbr: std
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: std
+  bre:
+    name: breathiness
+    abbr: bre
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: bre
+  gen:
+    name: gender
+    abbr: gen
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: g
+  int:
+    name: intonation
+    abbr: intn
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: int
+  subh:
+    name: subharmonics
+    abbr: subh
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: subh
+  pcmp:
+    name: peak compressor
+    abbr: pcmp
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: p
+  dyn:
+    name: dynamics (esper)
+    abbr: dyn
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: dyn
+  bri:
+    name: brightness
+    abbr: bri
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: bri
+  rgh:
+    name: roughness
+    abbr: rghn
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: rgh
+  grwl:
+    name: growl
+    abbr: grwl
+    type: Numerical
+    min: 0
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: grwl
