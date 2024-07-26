@@ -53,24 +53,40 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
         "lovl",
         "loff",
         "pstb",
+        "grwl",
+        "subh",
         "std",
         "bre",
-        "g",
         "int",
-        "subh",
-        "p",
         "dyn",
         "bri",
         "rgh",
-        "grwl"
+        "g",
+        "p",
     };
     std::map<std::string, int> flags;
-    while (flagString.length() > 0) {
-        for (int i = 0; i < supportedFlags->length(); i++) {
-            if (flagString.find(supportedFlags[i]) == 0) {
-                for (size_t j = i + supportedFlags[i].length(); j < flagString.length(); j++) {
-                    if (j == flagString.length() || !isdigit(flagString[j])) {
-                        flags[supportedFlags[i]] = std::stoi(flagString.substr(supportedFlags[i].length(), j - supportedFlags[i].length() - i));
+    bool warning = false;
+    while (flagString.length() > 0)
+    {
+        for (int i = 0; i <= sizeof(supportedFlags); i++)
+        {
+            if (i == 13)
+            {
+                flagString = flagString.substr(1, flagString.length() - 1);
+                if (!warning)
+                {
+                    std::cout << "Warning: Unsupported flag(s) found. Other flags may be misinterpreted." << std::endl;
+                    warning = true;
+                }
+                break;
+            }
+            if (flagString.find(supportedFlags[i]) == 0)
+            {
+                for (size_t j = supportedFlags[i].length(); j <= flagString.length(); j++)
+                {
+                    if (j == flagString.length() || !isdigit(flagString[j]))
+                    {
+                        flags[supportedFlags[i]] = std::stoi(flagString.substr(supportedFlags[i].length(), j - supportedFlags[i].length()));
                         flagString = flagString.substr(j, flagString.length() - j);
                         break;
                     }
@@ -110,10 +126,10 @@ std::vector<int> decodePitchBend(std::string pitchBendString)
         size_t splitIndex = pitchBendString.find('#');
         if (splitIndex == std::string::npos)
         {
-            splitIndex = pitchBendString.length();
+            break;
         }
         substrings.push_back(pitchBendString.substr(0, splitIndex));
-        pitchBendString = pitchBendString.substr(splitIndex, pitchBendString.length() - splitIndex);
+        pitchBendString = pitchBendString.substr(splitIndex + 1, pitchBendString.length() - splitIndex - 1);
     }
     // Decode pairs of substrings
     for (int i = 0; i < substrings.size(); i += 2)
@@ -141,20 +157,22 @@ std::vector<int> decodePitchBend(std::string pitchBendString)
 
 resamplerArgs parseArguments(int argc, char* argv[]) {
     resamplerArgs args;
-    args.inputPath = argv[0];
-    args.outputPath = argv[1];
-    args.pitch = noteToMidiPitch(argv[2]);
-    args.velocity = std::stof(argv[3]);
-    args.flags = parseFlagString(argv[4]);
-    args.offset = std::stof(argv[5]);
-    args.length = std::stoi(argv[6]);
-    args.consonant = std::stof(argv[7]);
-    args.cutoff = std::stof(argv[8]);
-    args.volume = std::stof(argv[9]);
-    args.modulation = std::stof(argv[10]);
-    std::string tempoString = argv[11];
+    args.rsmpDir = std::string(argv[0]);
+    args.rsmpDir = args.rsmpDir.substr(0, args.rsmpDir.find_last_of("/\\"));
+    args.inputPath = std::string(argv[1]);
+    args.outputPath = std::string(argv[2]);
+    args.pitch = noteToMidiPitch(argv[3]);
+    args.velocity = std::atof(argv[4]);
+    args.flags = parseFlagString(std::string(argv[5]));
+    args.offset = std::atof(argv[6]);
+    args.length = std::atoi(argv[7]);
+    args.consonant = std::atof(argv[8]);
+    args.cutoff = std::atof(argv[9]);
+    args.volume = std::atof(argv[10]);
+    args.modulation = std::atof(argv[11]);
+    std::string tempoString = std::string(argv[12]);
     args.tempo = std::stof(tempoString.substr(1, tempoString.length() - 1));
-    args.pitchBend = decodePitchBend(argv[12]);
+    args.pitchBend = decodePitchBend(std::string(argv[13]));
     return args;
 }
 

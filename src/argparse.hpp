@@ -5,6 +5,7 @@
 
 struct resamplerArgs
 {
+    std::string rsmpDir;
     std::string inputPath;
     std::string outputPath;
     int pitch;
