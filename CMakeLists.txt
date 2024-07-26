@@ -3,7 +3,8 @@ project(ESPER-Utau VERSION 0.1.0 LANGUAGES C CXX)
 
 add_executable(ESPER-Utau
     src/main.cpp
-    src/argparse.cpp)
+    src/argparse.cpp
+    AudioFile/AudioFile.h)
 
 include(CTest)
 enable_testing()
