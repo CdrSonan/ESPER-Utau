@@ -1,31 +1,24 @@
 #include <iostream>
 #include <map>
 #include <string>
-
 #include <windows.h>
 
 #include "argparse.hpp"
+#include "fileio.hpp"
+#include "create-esper-structs.hpp"
+#include "esper.h"
 
 int main(int argc, char* argv[]) {
     resamplerArgs args = parseArguments(argc, argv);
-    // write args to cout
-    std::cout << "Resampler path: " << args.rsmpDir << std::endl;
-    Sleep(100);
-    std::cout << "Input path: " << args.inputPath << std::endl;
-    Sleep(100);
-    std::cout << "Output path: " << args.outputPath << std::endl;
-    Sleep(100);
-    std::cout << "Flags: " << std::endl;
-    Sleep(100);
-    for (auto const& flag : args.flags) {
-        std::cout << flag.first << ": " << flag.second << std::endl;
-        Sleep(100);
-    }
-    std::cout << "Pitch bend: " << std::endl;
-    Sleep(100);
-    for (int i = 0; i < args.pitchBend.size(); i++) {
-        std::cout << args.pitchBend[i] << " ";
-    }
-    std::cout << std::endl;
+    std::map<std::string, std::string> iniCfg;
+    readIniFile(args.rsmpDir + "\\esper-config.ini", &iniCfg);
+    readIniFile(args.inputPath.substr(0, args.rsmpDir.find_last_of("/\\")) + "\\resampler-config.ini", &iniCfg);
+    engineCfg cfg = createEngineCfg(iniCfg);
+
+    int numSamples;
+    float* wave = readWavFile(args.inputPath, &numSamples);
+    cSample sample = createCSample(wave, numSamples, cfg, iniCfg);
+    pitchCalcFallback(sample, cfg);
+    specCalc(sample, cfg);
     return 0;
 }

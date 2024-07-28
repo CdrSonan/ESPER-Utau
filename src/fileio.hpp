@@ -3,8 +3,8 @@
 
 #pragma once
 
-float* readWavFile(const std::string& path, int& sampleRate, int& numSamples);
+float* readWavFile(const std::string& path, int* numSamples);
 
 void writeWavFile(const std::string& path, float* samples, int sampleRate, int numSamples);
 
-std::map<std::string, std::string> readIniFile(const std::string& path);
+void readIniFile(const std::string& path, std::map<std::string, std::string>* iniMap);

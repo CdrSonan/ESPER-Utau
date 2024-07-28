@@ -1,17 +1,17 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include "fileio.hpp"
 
 #include "AudioFile.h"
 
-float* readWavFile(const std::string& path, int& sampleRate, int& numSamples) {
+#include "fileio.hpp"
+
+float* readWavFile(const std::string& path, int* numSamples) {
     AudioFile<float> audioFile;
     audioFile.load(path);
-    sampleRate = audioFile.getSampleRate();
-    numSamples = audioFile.getNumSamplesPerChannel();
-    float* samples = new float[numSamples];
-    for (int i = 0; i < numSamples; i++) {
+    *numSamples = audioFile.getNumSamplesPerChannel();
+    float* samples = new float[*numSamples];
+    for (int i = 0; i < *numSamples; i++) {
         samples[i] = audioFile.samples[0][i];
     }
     return samples;
@@ -26,8 +26,7 @@ void writeWavFile(const std::string& path, float* samples, int sampleRate, int n
     audioFile.save(path);
 }
 
-std::map<std::string, std::string> readIniFile(const std::string& path) {
-    std::map<std::string, std::string> iniMap;
+void readIniFile(const std::string& path, std::map<std::string, std::string>* iniMap) {
     std::ifstream file(path);
     std::string line;
     while (std::getline(file, line)) {
@@ -47,8 +46,7 @@ std::map<std::string, std::string> readIniFile(const std::string& path) {
             value.erase(0, value.find_first_not_of(" \t"));
             value.erase(value.find_last_not_of(" \t") + 1);
             // Insert into the map
-            iniMap[key] = value;
+            (*iniMap)[key] = value;
         }
     }
-    return iniMap;
 }
