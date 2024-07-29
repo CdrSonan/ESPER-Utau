@@ -1,6 +1,10 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <fstream>
+#include <vector>
+#include <iomanip>
+#include <cstring>
 
 #include "AudioFile.h"
 
@@ -49,4 +53,87 @@ void readIniFile(const std::string& path, std::map<std::string, std::string>* in
             (*iniMap)[key] = value;
         }
     }
+}
+
+int readFrqFile(const std::string& filename, double* avg_frq, std::vector<double>* frequencies, std::vector<double>* amplitudes) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Unable to open .frq file: " << filename << std::endl;
+        return 1;
+    }
+
+    // Header
+    char header_text[9] = {0};
+    file.read(header_text, 8);
+    std::cout << "Found .frq file. Header: " << header_text << std::endl;
+
+    // Samples per frq value. Should always be 256.
+    int samples_per_frq;
+    file.read(reinterpret_cast<char*>(&samples_per_frq), sizeof(samples_per_frq));
+    std::cout << "Samples per frq: " << samples_per_frq << std::endl;
+    if (samples_per_frq != 256) {
+        std::cerr << "Invalid samples per frq value: " << samples_per_frq << std::endl;
+        return 1;
+    }
+
+    // Average frequency.
+    double avg_frq;
+    file.read(reinterpret_cast<char*>(avg_frq), sizeof(avg_frq));
+
+    // Empty space.
+    file.seekg(16, std::ios::cur);
+
+    // Number of chunks.
+    int num_chunks;
+    file.read(reinterpret_cast<char*>(&num_chunks), sizeof(num_chunks));
+
+    double frequency, amplitude;
+    for (int i = 0; i < num_chunks; ++i) {
+        
+        file.read(reinterpret_cast<char*>(&frequency), sizeof(frequency));
+        file.read(reinterpret_cast<char*>(&amplitude), sizeof(amplitude));
+        frequencies->push_back(frequency);
+        amplitudes->push_back(amplitude);
+    }
+
+    std::cout << "Successfully parsed frq file!" << std::endl;
+    return 0;
+}
+
+void writeFrqFile(const std::string& filename, const std::string& header_text, int samples_per_frq, double avg_frq, const std::vector<double>& frequencies, const std::vector<double>& amplitudes) {
+    if (frequencies.size() != amplitudes.size()) {
+        std::cerr << "Frequencies and amplitudes vectors must be of the same size." << std::endl;
+        return;
+    }
+
+    std::ofstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+        return;
+    }
+
+    // Write header
+    file.write(header_text.c_str(), 8);
+
+    // Write samples per frq value
+    file.write(reinterpret_cast<const char*>(&samples_per_frq), sizeof(samples_per_frq));
+
+    // Write average frequency
+    file.write(reinterpret_cast<const char*>(&avg_frq), sizeof(avg_frq));
+
+    // Write empty space
+    char empty_space[16] = {0};
+    file.write(empty_space, 16);
+
+    // Write number of chunks
+    int num_chunks = frequencies.size();
+    file.write(reinterpret_cast<const char*>(&num_chunks), sizeof(num_chunks));
+
+    // Write frequency and amplitude pairs
+    for (int i = 0; i < num_chunks; ++i) {
+        file.write(reinterpret_cast<const char*>(&frequencies[i]), sizeof(frequencies[i]));
+        file.write(reinterpret_cast<const char*>(&amplitudes[i]), sizeof(amplitudes[i]));
+    }
+
+    std::cout << "Successfully wrote frq file!" << std::endl;
 }
