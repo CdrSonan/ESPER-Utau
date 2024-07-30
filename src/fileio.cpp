@@ -2,11 +2,13 @@
 #include <string>
 #include <map>
 #include <fstream>
+#include <filesystem>
 #include <vector>
 #include <iomanip>
 #include <cstring>
 
 #include "AudioFile.h"
+#include "esper.h"
 
 #include "fileio.hpp"
 
@@ -77,7 +79,6 @@ int readFrqFile(const std::string& filename, double* avg_frq, std::vector<double
     }
 
     // Average frequency.
-    double avg_frq;
     file.read(reinterpret_cast<char*>(avg_frq), sizeof(avg_frq));
 
     // Empty space.
@@ -136,4 +137,77 @@ void writeFrqFile(const std::string& filename, const std::string& header_text, i
     }
 
     std::cout << "Successfully wrote frq file!" << std::endl;
+}
+
+struct espFileHeader
+{
+    unsigned int sampleRate;
+    unsigned short tickRate;
+    unsigned int batchSize;
+    unsigned int nHarmonics;
+    unsigned int batches;
+    unsigned int pitchLength;
+    unsigned int pitch;
+    int isVoiced;
+    int isPlosive;
+};
+
+int readEspFile(std::string path, cSample& sample, engineCfg config)
+{
+    //check if the file exists
+    if (!std::filesystem::exists(path))
+    {
+        std::cerr << "ESP File not found: " << path << std::endl;
+        return 1;
+    }
+    FILE* file = fopen(path.c_str(), "rb");
+    espFileHeader header;
+    fread(&header, sizeof(espFileHeader), 1, file);
+    
+    // check if the file is valid under the current engine configuration
+    if (header.sampleRate != config.sampleRate ||
+        header.tickRate != config.tickRate ||
+        header.batchSize != config.batchSize ||
+        header.nHarmonics != config.nHarmonics)
+    {
+        std::cerr << "Invalid ESP file for current config: " << path << std::endl;
+        fclose(file);
+        exit(1);
+    }
+    sample.config.batches = header.batches;
+    sample.config.pitchLength = header.pitchLength;
+    sample.config.pitch = header.pitch;
+    sample.config.isVoiced = header.isVoiced;
+    sample.config.isPlosive = header.isPlosive;
+    sample.pitchDeltas = (int*)malloc(sample.config.pitchLength * sizeof(int));
+    sample.specharm = (float*)malloc(sample.config.batches * config.frameSize * sizeof(float));
+    sample.avgSpecharm = (float*)malloc((config.nHarmonics + config.halfTripleBatchSize + 3) * sizeof(float));
+    sample.excitation = (float*)malloc(sample.config.batches * (config.halfTripleBatchSize + 1) * 2 * sizeof(float));
+    fread(sample.pitchDeltas, sizeof(float), sample.config.pitchLength, file);
+    fread(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
+    fread(sample.avgSpecharm, sizeof(float), config.nHarmonics + config.halfTripleBatchSize + 3, file);
+    fread(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);
+    fclose(file);
+    return 0;
+}
+
+void writeEspFile(std::string path, cSample& sample, engineCfg config)
+{
+    FILE* file = fopen(path.c_str(), "wb");
+    espFileHeader header;
+    header.sampleRate = config.sampleRate;
+    header.tickRate = config.tickRate;
+    header.batchSize = config.batchSize;
+    header.nHarmonics = config.nHarmonics;
+    header.batches = sample.config.batches;
+    header.pitchLength = sample.config.pitchLength;
+    header.pitch = sample.config.pitch;
+    header.isVoiced = sample.config.isVoiced;
+    header.isPlosive = sample.config.isPlosive;
+    fwrite(&header, sizeof(espFileHeader), 1, file);
+    fwrite(sample.pitchDeltas, sizeof(float), sample.config.pitchLength, file);
+    fwrite(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
+    fwrite(sample.avgSpecharm, sizeof(float), config.nHarmonics + config.halfTripleBatchSize + 3, file);
+    fwrite(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);
+    fclose(file);
 }

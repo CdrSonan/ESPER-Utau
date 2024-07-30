@@ -55,5 +55,16 @@ void applyFrqToSample(cSample& sample, double avg_frq, std::vector<double> frequ
 
 void getFrqFromSample(cSample& sample, std::vector<double>& frequencies, std::vector<double>& amplitudes, engineCfg config)
 {
-    
+    frequencies.clear();
+    amplitudes.clear();
+    for (int i = 0; i < sample.config.pitchLength; i++) {
+        frequencies.push_back(config.sampleRate / sample.pitchDeltas[i]);
+        float amplitude = 0;
+        for (int j = 0; j < 256; j++) {
+            if (abs(sample.waveform[i * 256 + j]) > amplitude) {
+                amplitude = abs(sample.waveform[i * 256 + j]);
+            }
+        }
+        amplitudes.push_back(amplitude);
+    }
 }

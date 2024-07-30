@@ -16,30 +16,47 @@ int main(int argc, char* argv[]) {
     readIniFile(args.rsmpDir + "\\esper-config.ini", &iniCfg);
     readIniFile(args.inputPath.substr(0, args.rsmpDir.find_last_of("/\\")) + "\\resampler-config.ini", &iniCfg);
     engineCfg cfg = createEngineCfg(iniCfg);
-
-    int numSamples;
-    float* wave = readWavFile(args.inputPath, &numSamples);
-    cSample sample = createCSample(wave, numSamples, cfg, iniCfg);
-    int frqReadSuccess = 1;
-    double avg_frq;
-    std::vector<double> frequencies;
-    std::vector<double> amplitudes;
-    std::string frqFilePath = args.inputPath + ".frq";
-    if (iniCfg["useFrqFiles"] == "true") {
-        frqReadSuccess = readFrqFile(frqFilePath, &avg_frq, &frequencies, &amplitudes);
-        if (frqReadSuccess == 0)
+    cSample sample;
+    int espReadSuccess = 1;
+    if (iniCfg["useEspFiles"] == "true")
+    {
+        std::string espFilePath = args.inputPath + ".esp";
+        espReadSuccess = readEspFile(espFilePath, sample, cfg);
+    }
+    if (espReadSuccess != 0)
+    {
+        int numSamples;
+        float* wave = readWavFile(args.inputPath, &numSamples);
+        sample = createCSample(wave, numSamples, cfg, iniCfg);
+        int frqReadSuccess = 1;
+        double avg_frq;
+        std::vector<double> frequencies;
+        std::vector<double> amplitudes;
+        std::string frqFilePath = args.inputPath + ".frq";
+        if (iniCfg["useFrqFiles"] == "true")
         {
-            applyFrqToSample(sample, avg_frq, frequencies, cfg);
+            frqReadSuccess = readFrqFile(frqFilePath, &avg_frq, &frequencies, &amplitudes);
+            if (frqReadSuccess == 0)
+            {
+                applyFrqToSample(sample, avg_frq, frequencies, cfg);
+            }
+        }
+        if (frqReadSuccess != 0)
+        {
+            pitchCalcFallback(sample, cfg);
+            if ((iniCfg["createFrqFiles"] == "true" && !std::filesystem::exists(frqFilePath)) || iniCfg["overwriteFrqFiles"] == "true")
+            {
+                getFrqFromSample(sample, frequencies, amplitudes, cfg);
+                writeFrqFile(frqFilePath, "Created by ESPER-Utau resampler", 256, cfg.sampleRate / sample.config.pitch, frequencies, amplitudes);
+            }
+        }
+        specCalc(sample, cfg);
+        if ((iniCfg["createEspFiles"] == "true" && !std::filesystem::exists(args.outputPath + ".esp")) || iniCfg["overwriteEspFiles"] == "true")
+        {
+            writeEspFile(args.outputPath + ".esp", sample, cfg);
         }
     }
-    if (frqReadSuccess != 0)
-    {
-        pitchCalcFallback(sample, cfg);
-        if ((iniCfg["createFrqFiles"] == "true" && !std::filesystem::exists(frqFilePath)) || iniCfg["overwriteFrqFiles"] == "true"){
-            getFrqFromSample(sample, frequencies, amplitudes, cfg);
-            writeFrqFile(frqFilePath, "Created by ESPER-Utau resampler", 256, cfg.sampleRate / sample.config.pitch, frequencies, amplitudes);
-    }
-    }
-    specCalc(sample, cfg);
+
+    
     return 0;
 }
