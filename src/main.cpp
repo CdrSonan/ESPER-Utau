@@ -57,6 +57,53 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    
+    float* steadinessArr = (float*)malloc(args.length / 4 * sizeof(float));
+    float* breathinessArr = (float*)malloc(args.length / 4 * sizeof(float));
+    segmentTiming timings;
+    timings.start1 = 0;
+    timings.start2 = 1;
+    timings.start3 = 2;
+    timings.end1 = args.length / 4 - (int)(args.consonant / 4) - 3;
+    timings.end2 = args.length / 4 - (int)(args.consonant / 4) - 2;
+    timings.end3 = args.length / 4 - (int)(args.consonant / 4) - 1;
+    timings.windowStart = 0;
+    timings.windowEnd = args.length / 4 - (int)(args.consonant / 4) - 1;
+    timings.offset = 0;
+
+    float* resampledSpecharm = (float*)malloc(args.length / 4 * cfg.frameSize * sizeof(float));
+    memcpy(resampledSpecharm, sample.specharm + (int)(args.offset / 4) * cfg.frameSize, (int)(args.consonant / 4) * cfg.frameSize * sizeof(float));
+    for (int i = 0; i < (int)(args.consonant / 4); i++)
+    {
+        for (int j = 0; j < cfg.halfHarmonics; j++)
+        {
+            resampledSpecharm[i * cfg.frameSize + j] += sample.avgSpecharm[j];
+        }
+        for (int j = cfg.halfHarmonics; j < cfg.frameSize; j++)
+        {
+            resampledSpecharm[i * cfg.frameSize + cfg.halfHarmonics + j] += sample.avgSpecharm[j];
+        }
+    }
+    resampleSpecharm(sample.avgSpecharm, sample.specharm, sample.config.length, steadinessArr, 0.5, 1, 1, resampledSpecharm + (int)(args.consonant / 4) * cfg.frameSize, timings, cfg);
+
+    float* resampledPitch = (float*)malloc(args.length / 4 * sizeof(float));
+    memcpy(resampledPitch, sample.pitchDeltas + (int)(args.offset / 4), (int)(args.consonant / 4) * sizeof(float));
+    for (int i = 0; i < (int)(args.consonant / 4); i++)
+    {
+        resampledPitch[i] += sample.config.pitch;
+    }
+    resamplePitch(sample.pitchDeltas, sample.config.pitchLength, sample.config.pitch, 0.5, 1, 1, resampledPitch + (int)(args.consonant / 4), args.length / 4 - (int)(args.consonant / 4), timings);
     return 0;
+
+    float* resampledExcitation = (float*)malloc(args.length / 4 * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
+    memcpy(resampledExcitation, sample.excitation + (int)(args.offset / 4) * (cfg.halfTripleBatchSize + 1), (int)(args.consonant / 4) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
+    memcpy(resampledExcitation + (int)(args.consonant / 4) * (cfg.halfTripleBatchSize + 1), sample.excitation + (int)(args.offset / 4 + sample.config.length) * (cfg.halfTripleBatchSize + 1) * 2, (int)(args.consonant / 4) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
+    resampleExcitation(sample.excitation, sample.config.batches, 1, 1, resampledExcitation + (int)(args.consonant / 4) * (cfg.halfTripleBatchSize + 1) * 2, timings, cfg);
+    fuseConsecutiveExcitation(resampledExcitation, args.length / 4, (int)(args.consonant / 4), cfg);
+
+    //pitchShift(resampledSpecharm, ...) TODO: figure out correct srcPitch and tgtPitch
+
+    float* resampledWave = (float*)malloc(args.length / 4 * cfg.batchSize * sizeof(float));
+    renderUnvoiced(resampledSpecharm, resampledExcitation, 1, resampledWave, args.length / 4, cfg);
+    float phase = 0;
+    renderVoiced(resampledSpecharm, resampledPitch, &phase, resampledWave, args.length / 4, cfg);
 }

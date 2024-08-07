@@ -174,10 +174,10 @@ segmentTiming;
 //ANALYSIS FUNCTIONS
 
 //Given a sample and its configuration, this function determines the pitch and fills the pitchDeltas array and related fields.
-LIBESPER_EXPORT void LIBESPER_CDECL pitchCalcFallback(cSample sample, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL pitchCalcFallback(cSample sample, engineCfg config);
 
 //Main function of this library. Given a sample and its configuration, this function determines its spectrum, harmonics and residuals, and writes them to the appropriate fields.
-LIBESPER_EXPORT void LIBESPER_CDECL specCalc(cSample sample, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL specCalc(cSample sample, engineCfg config);
 
 
 
@@ -193,7 +193,7 @@ LIBESPER_EXPORT void LIBESPER_CDECL specCalc(cSample sample, engineCfg config);
     timings: the timing settings for the sample.
     config: the engine configuration settings used.
 */
-LIBESPER_EXPORT void LIBESPER_CDECL resampleExcitation(float* excitation, int length, int startCap, int endCap, float* output, segmentTiming timings, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL resampleExcitation(float* excitation, int length, int startCap, int endCap, float* output, segmentTiming timings, engineCfg config);
 
 /*Given a specharm array, this function resamples it to the desired length and writes the result to the output array.
   Arguments:
@@ -208,7 +208,7 @@ LIBESPER_EXPORT void LIBESPER_CDECL resampleExcitation(float* excitation, int le
     timings: the timing settings for the sample.
     config: the engine configuration settings used.
 */
-LIBESPER_EXPORT void LIBESPER_CDECL resampleSpecharm(float* avgSpecharm, float* specharm, int length, float* steadiness, float spacing, int startCap, int endCap, float* output, segmentTiming timings, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL resampleSpecharm(float* avgSpecharm, float* specharm, int length, float* steadiness, float spacing, int startCap, int endCap, float* output, segmentTiming timings, engineCfg config);
 
 
 /*Given a pitchDeltas array, this function resamples it to the desired length and writes the result to the output array.
@@ -223,14 +223,14 @@ LIBESPER_EXPORT void LIBESPER_CDECL resampleSpecharm(float* avgSpecharm, float* 
     requiredSize: the length of the output array.
     timings: the timing settings for the sample.
 */
-LIBESPER_EXPORT void LIBESPER_CDECL resamplePitch(int* pitchDeltas, int length, float pitch, float spacing, int startCap, int endCap, float* output, int requiredSize, segmentTiming timings);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL resamplePitch(int* pitchDeltas, int length, float pitch, float spacing, int startCap, int endCap, float* output, int requiredSize, segmentTiming timings);
 
 
 
 //MODIFICATION FUNCTIONS
 
 //Given a specharm array and its length, this function applies a breathiness modification to it.
-LIBESPER_EXPORT void LIBESPER_CDECL applyBreathiness(float* specharm, float* breathiness, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL applyBreathiness(float* specharm, float* breathiness, int length, engineCfg config);
 
 /*This function applies a pitch shift to a specharm array.
   Arguments:
@@ -242,19 +242,19 @@ LIBESPER_EXPORT void LIBESPER_CDECL applyBreathiness(float* specharm, float* bre
     length: the length of the specharm array.
     config: the engine configuration settings used.
 */
-LIBESPER_EXPORT void LIBESPER_CDECL pitchShift(float* specharm, float* srcPitch, float* tgtPitch, float* formantShift, float* breathiness, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL pitchShift(float* specharm, float* srcPitch, float* tgtPitch, float* formantShift, float* breathiness, int length, engineCfg config);
 
 //applies a dynamics effect to a specharm array. Also requires a pitch array.
-LIBESPER_EXPORT void LIBESPER_CDECL applyDynamics(float* specharm, float* dynamics, float* pitch, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL applyDynamics(float* specharm, float* dynamics, float* pitch, int length, engineCfg config);
 
 //applies a brightness effectto a specharm array.
-void LIBESPER_CDECL applyBrightness(float* specharm, float* brightness, int length, engineCfg config);
+extern "C" void LIBESPER_CDECL applyBrightness(float* specharm, float* brightness, int length, engineCfg config);
 
 //applies a growl effect to a specharm array. lfophase is a pointer to a single float value representing the phase of the growl effect at the beginning of the sample. It will be updated to the phase at the end of the sample.
-LIBESPER_EXPORT void LIBESPER_CDECL applyGrowl(float* specharm, float* growl, float* lfoPhase, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL applyGrowl(float* specharm, float* growl, float* lfoPhase, int length, engineCfg config);
 
 //applies a roughness effect to a specharm array.
-LIBESPER_EXPORT void LIBESPER_CDECL applyRoughness(float* specharm, float* roughness, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL applyRoughness(float* specharm, float* roughness, int length, engineCfg config);
 
 
 
@@ -262,7 +262,7 @@ LIBESPER_EXPORT void LIBESPER_CDECL applyRoughness(float* specharm, float* rough
 
 //Given a specharm array and an excitation array, this function renders the unvoiced portion of the sample into the target array.
 //the "premultiplied" argument specifies whether the excitation array is already multiplied by the spectrum before this function is called.
-LIBESPER_EXPORT void LIBESPER_CDECL renderUnvoiced(float* specharm, float* excitation, int premultiplied, float* target, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL renderUnvoiced(float* specharm, float* excitation, int premultiplied, float* target, int length, engineCfg config);
 
 /*Render the voiced portion of the sample into the target array.
   Arguments:
@@ -273,7 +273,7 @@ LIBESPER_EXPORT void LIBESPER_CDECL renderUnvoiced(float* specharm, float* excit
     length: the length of the target array.
     config: the engine configuration settings used.
 */
-LIBESPER_EXPORT void LIBESPER_CDECL renderVoiced(float* specharm, float* pitch, float* phase, float* target, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL renderVoiced(float* specharm, float* pitch, float* phase, float* target, int length, engineCfg config);
 
 //Function combining renderUnvoiced and renderVoiced to render an entire sample.
-LIBESPER_EXPORT void LIBESPER_CDECL render(float* specharm, float* excitation, float* pitch, int premultipliedExc, float* phase, float* target, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL render(float* specharm, float* excitation, float* pitch, int premultipliedExc, float* phase, float* target, int length, engineCfg config);
