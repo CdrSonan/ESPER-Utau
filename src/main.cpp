@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
         }
         if (frqReadSuccess != 0)
         {
-            pitchCalcFallback(sample, cfg);
+            pitchCalcFallback(&sample, cfg);
             if ((iniCfg["createFrqFiles"] == "true" && !std::filesystem::exists(frqFilePath)) || iniCfg["overwriteFrqFiles"] == "true")
             {
                 getFrqFromSample(sample, frequencies, amplitudes, cfg);
@@ -56,6 +56,8 @@ int main(int argc, char* argv[]) {
             writeEspFile(args.outputPath + ".esp", sample, cfg);
         }
     }
+
+    int esperLength = args.length / 4 + args.consonant / 4;//TODO: adjust following length and consonant references to the correct format !!!important!!!
 
     float* steadinessArr = (float*)malloc(args.length / 4 * sizeof(float));
     float* breathinessArr = (float*)malloc(args.length / 4 * sizeof(float));
@@ -86,13 +88,33 @@ int main(int argc, char* argv[]) {
     resampleSpecharm(sample.avgSpecharm, sample.specharm, sample.config.length, steadinessArr, 0.5, 1, 1, resampledSpecharm + (int)(args.consonant / 4) * cfg.frameSize, timings, cfg);
 
     float* resampledPitch = (float*)malloc(args.length / 4 * sizeof(float));
-    memcpy(resampledPitch, sample.pitchDeltas + (int)(args.offset / 4), (int)(args.consonant / 4) * sizeof(float));
     for (int i = 0; i < (int)(args.consonant / 4); i++)
     {
-        resampledPitch[i] += sample.config.pitch;
+        resampledPitch[i] = (float)(sample.pitchDeltas[(int)(args.offset / 4) + i] - sample.config.pitch);
     }
     resamplePitch(sample.pitchDeltas, sample.config.pitchLength, sample.config.pitch, 0.5, 1, 1, resampledPitch + (int)(args.consonant / 4), args.length / 4 - (int)(args.consonant / 4), timings);
-    return 0;
+
+    float* srcPitch = (float*)malloc(args.length / 4 * sizeof(float));
+    for (int i = 0; i < (int)(args.length / 4); i++)
+	{
+		srcPitch[i] = resampledPitch[i] + sample.config.pitch;
+    }
+    float* tgtPitch = (float*)malloc(args.length / 4 * sizeof(float));
+    for (int i = 0; i < (int)(args.length / 4); i++)
+    {
+        float pitchBendPos = (float)i / (args.length / 4) * args.pitchBend.size();
+        int pitchBendIndex = (int)pitchBendPos;
+        float pitchBendWeight = pitchBendPos - pitchBendIndex;
+        float pitchBend = args.pitchBend[pitchBendIndex] * (1 - pitchBendWeight) + args.pitchBend[pitchBendIndex + 1] * pitchBendWeight;
+        if (args.flags.find("t") != args.flags.end())
+		{
+            tgtPitch[i] = resampledPitch[i] + midiPitchToEsperPitch(args.pitch, cfg) * powf(2, pitchBend / 1200) * powf(2, args.flags["t"] / 100); 
+		}
+        else
+        {
+            tgtPitch[i] = resampledPitch[i] + midiPitchToEsperPitch(args.pitch, cfg) * powf(2, pitchBend / 1200);
+        }
+	}
 
     float* resampledExcitation = (float*)malloc(args.length / 4 * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
     memcpy(resampledExcitation, sample.excitation + (int)(args.offset / 4) * (cfg.halfTripleBatchSize + 1), (int)(args.consonant / 4) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
@@ -101,9 +123,11 @@ int main(int argc, char* argv[]) {
     fuseConsecutiveExcitation(resampledExcitation, args.length / 4, (int)(args.consonant / 4), cfg);
 
     //pitchShift(resampledSpecharm, ...) TODO: figure out correct srcPitch and tgtPitch
-
+    std::cout << "test0" << std::endl; Sleep(200);
     float* resampledWave = (float*)malloc(args.length / 4 * cfg.batchSize * sizeof(float));
     renderUnvoiced(resampledSpecharm, resampledExcitation, 1, resampledWave, args.length / 4, cfg);
     float phase = 0;
     renderVoiced(resampledSpecharm, resampledPitch, &phase, resampledWave, args.length / 4, cfg);
+
+    return 0;
 }

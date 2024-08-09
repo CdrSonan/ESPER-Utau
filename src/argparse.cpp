@@ -63,6 +63,7 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
         "rgh",
         "g",
         "p",
+        "t",
     };
     std::map<std::string, int> flags;
     bool warning = false;

@@ -174,7 +174,7 @@ segmentTiming;
 //ANALYSIS FUNCTIONS
 
 //Given a sample and its configuration, this function determines the pitch and fills the pitchDeltas array and related fields.
-extern "C" LIBESPER_EXPORT void LIBESPER_CDECL pitchCalcFallback(cSample sample, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL pitchCalcFallback(cSample* sample, engineCfg config);
 
 //Main function of this library. Given a sample and its configuration, this function determines its spectrum, harmonics and residuals, and writes them to the appropriate fields.
 extern "C" LIBESPER_EXPORT void LIBESPER_CDECL specCalc(cSample sample, engineCfg config);

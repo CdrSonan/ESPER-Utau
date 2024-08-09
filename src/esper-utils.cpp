@@ -68,3 +68,8 @@ void getFrqFromSample(cSample& sample, std::vector<double>& frequencies, std::ve
         amplitudes.push_back(amplitude);
     }
 }
+
+float midiPitchToEsperPitch(float pitch, engineCfg config)
+{
+	return (float)config.sampleRate / (440 * pow(2, (pitch - 69) / 12));
+}

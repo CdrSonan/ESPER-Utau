@@ -31,8 +31,9 @@
 *.out
 *.app
 
-#build dir
+#build dirs
 build
+out
 
 #IDEs
 .vscode
