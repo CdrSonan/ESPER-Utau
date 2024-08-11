@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     }
     else
     {
-        args.cutoff = sample.config.batches - args.cutoff;
+        args.cutoff = sample.config.batches - args.offset - args.cutoff;
     }
     int esperLength = args.length + (int)args.consonant;
 
@@ -111,14 +111,14 @@ int main(int argc, char* argv[]) {
             resampledSpecharm[i * cfg.frameSize + cfg.halfHarmonics + j] += sample.avgSpecharm[j];
         }
     }
-    resampleSpecharm(sample.avgSpecharm, sample.specharm + (int)((args.offset) + args.consonant) * cfg.frameSize, args.cutoff, steadinessArr, 0.5, 0, 0, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
+    resampleSpecharm(sample.avgSpecharm, sample.specharm + (int)((args.offset) + args.consonant) * cfg.frameSize, (int)args.cutoff, steadinessArr, 0.5, 0, 0, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
 
     float* resampledPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(args.consonant); i++)
     {
         resampledPitch[i] = (float)(sample.pitchDeltas[(int)(args.offset) + i] - sample.config.pitch);
     }
-    resamplePitch(sample.pitchDeltas + (int)((args.offset) + args.consonant), args.cutoff, (float)sample.config.pitch, 0.5, 0, 0, resampledPitch + (int)(args.consonant), args.length, timings);
+    resamplePitch(sample.pitchDeltas + (int)((args.offset) + args.consonant), (int)args.cutoff, (float)sample.config.pitch, 0.5, 0, 0, resampledPitch + (int)(args.consonant), args.length, timings);
 
     float* srcPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(esperLength); i++)
@@ -149,15 +149,22 @@ int main(int argc, char* argv[]) {
             tgtPitch[i] = resampledPitch[i] + midiPitchToEsperPitch((float)args.pitch, cfg) * powf(2, pitchBend / 1200);
         }
 	}
-
-    float* resampledExcitation = (float*)malloc(esperLength * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
+    std::cout << "sanity check: sample length:" << sample.config.batches << "offset:" << (int)(args.offset) << "consonant:" << (int)(args.consonant) << "cutoff:" << args.cutoff << std::endl;
+    float* resampledExcitation = (float*)malloc(esperLength * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));//TODO' fix excitation memory allocation, part passed to resampler, etc.
+    float* loopExcitationBase = (float*)malloc((int)args.cutoff * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
     memcpy(resampledExcitation,
         sample.excitation + (int)(args.offset) * (cfg.halfTripleBatchSize + 1),
         (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
     memcpy(resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1),
         sample.excitation + (int)(args.offset + sample.config.batches) * (cfg.halfTripleBatchSize + 1),
         (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
-    resampleExcitation(sample.excitation, sample.config.batches, 0, 0, resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * 2, timings, cfg);
+    memcpy(loopExcitationBase,
+        sample.excitation + (int)(args.offset + args.consonant) * (cfg.halfTripleBatchSize + 1),
+		(int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
+    memcpy(loopExcitationBase + (int)args.cutoff * (cfg.halfTripleBatchSize + 1),
+		sample.excitation + (int)(args.offset + args.consonant + args.length) * (cfg.halfTripleBatchSize + 1),
+		(int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
+    resampleExcitation(loopExcitationBase, (int)args.cutoff, 0, 0, resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * 2, timings, cfg);
     fuseConsecutiveExcitation(resampledExcitation, esperLength, (int)(args.consonant), cfg);
 
     pitchShift(resampledSpecharm, srcPitch, tgtPitch, formantShift, breathinessArr, esperLength, cfg);
