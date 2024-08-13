@@ -72,20 +72,20 @@ int main(int argc, char* argv[]) {
     int esperLength = args.length + (int)args.consonant;
 
     float* steadinessArr = (float*)malloc(esperLength * sizeof(float));
-    float* breathinessArr = (float*)malloc(esperLength * sizeof(float));//TODO: fill arrays with values from args if present
+    float* breathinessArr = (float*)malloc(esperLength * sizeof(float));
     float* formantShift = (float*)malloc(esperLength * sizeof(float));
     float steadiness = 0;
     float breathiness = 0;
     if (args.flags.find("std") != args.flags.end())
         steadiness = (float)args.flags["std"] / 100.f;
     if (args.flags.find("bre") != args.flags.end())
-		breathiness = (float)args.flags["bre"] / 100.f;
+        breathiness = (float)args.flags["bre"] / 100.f;
     for (int i = 0; i < esperLength; i++)
-	{
-		steadinessArr[i] = steadiness;
-		breathinessArr[i] = breathiness;
-		formantShift[i] = 0;
-	}
+    {
+        steadinessArr[i] = steadiness;
+        breathinessArr[i] = breathiness;
+        formantShift[i] = 0;
+    }
 
     segmentTiming timings;
     timings.start1 = 0;
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
         {
             resampledSpecharm[i * cfg.frameSize + j] += sample.avgSpecharm[j];
         }
-        for (unsigned int j = cfg.halfHarmonics; j < cfg.frameSize; j++)
+        for (unsigned int j = cfg.halfHarmonics; j < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; j++)
         {
             resampledSpecharm[i * cfg.frameSize + cfg.halfHarmonics + j] += sample.avgSpecharm[j];
         }
@@ -122,8 +122,8 @@ int main(int argc, char* argv[]) {
 
     float* srcPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(esperLength); i++)
-	{
-		srcPitch[i] = resampledPitch[i] + sample.config.pitch;
+    {
+        srcPitch[i] = resampledPitch[i] + sample.config.pitch;
     }
     float* tgtPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(esperLength); i++)
@@ -133,22 +133,22 @@ int main(int argc, char* argv[]) {
         float pitchBendWeight = pitchBendPos - pitchBendIndex;
         float pitchBend;
         if (pitchBendIndex >= args.pitchBend.size() - 1)
-		{
-			pitchBend = args.pitchBend[args.pitchBend.size() - 1];
-		}
+        {
+            pitchBend = args.pitchBend[args.pitchBend.size() - 1];
+        }
         else
         {
             pitchBend = args.pitchBend[pitchBendIndex] * (1 - pitchBendWeight) + args.pitchBend[pitchBendIndex + 1] * pitchBendWeight;
         }
         if (args.flags.find("t") != args.flags.end())
-		{
-            tgtPitch[i] = resampledPitch[i] + midiPitchToEsperPitch((float)args.pitch, cfg) * powf(2, pitchBend / 1200) * powf(2, (float)args.flags["t"] / 100); 
-		}
+        {
+            tgtPitch[i] = resampledPitch[i] + midiPitchToEsperPitch((float)args.pitch, cfg) * powf(2, pitchBend / 1200) * powf(2, (float)args.flags["t"] / 100);
+        }
         else
         {
             tgtPitch[i] = resampledPitch[i] + midiPitchToEsperPitch((float)args.pitch, cfg) * powf(2, pitchBend / 1200);
         }
-	}
+    }
     std::cout << "sanity check: sample length:" << sample.config.batches << "offset:" << (int)(args.offset) << "consonant:" << (int)(args.consonant) << "cutoff:" << args.cutoff << std::endl;
     float* resampledExcitation = (float*)malloc(esperLength * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));//TODO' fix excitation memory allocation, part passed to resampler, etc.
     float* loopExcitationBase = (float*)malloc((int)args.cutoff * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
@@ -160,19 +160,51 @@ int main(int argc, char* argv[]) {
         (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
     memcpy(loopExcitationBase,
         sample.excitation + (int)(args.offset + args.consonant) * (cfg.halfTripleBatchSize + 1),
-		(int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
+        (int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
     memcpy(loopExcitationBase + (int)args.cutoff * (cfg.halfTripleBatchSize + 1),
-		sample.excitation + (int)(args.offset + args.consonant + args.length) * (cfg.halfTripleBatchSize + 1),
-		(int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
+        sample.excitation + (int)(args.offset + args.consonant + args.length) * (cfg.halfTripleBatchSize + 1),
+        (int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
     resampleExcitation(loopExcitationBase, (int)args.cutoff, 0, 0, resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * 2, timings, cfg);
     fuseConsecutiveExcitation(resampledExcitation, esperLength, (int)(args.consonant), cfg);
 
     pitchShift(resampledSpecharm, srcPitch, tgtPitch, formantShift, breathinessArr, esperLength, cfg);
 
-    float* resampledWave = (float*)malloc(esperLength * cfg.batchSize * sizeof(float));
-    renderUnvoiced(resampledSpecharm, resampledExcitation, 1, resampledWave, esperLength, cfg);
+    float subharmonics = 1.f;
+    if (args.flags.find("subh") != args.flags.end())
+    {
+        subharmonics = powf(1.f + (float)args.flags["subh"] / 100.f, 2.f);
+    }
+    for (int i = 0; i < esperLength; i++)
+    {
+        resampledSpecharm[i * cfg.frameSize] *= subharmonics;
+    }
+    float* paramArr = (float*)malloc(esperLength * sizeof(float));
+    if (args.flags.find("bre") != args.flags.end())
+    {
+		for (int i = 0; i < esperLength; i++)
+		{
+			paramArr[i] = breathinessArr[i];
+		}
+	}
+	else
+	{
+		for (int i = 0; i < esperLength; i++)
+		{
+			paramArr[i] = 0;
+		}
+	}
+    applyBreathiness(resampledSpecharm, breathinessArr, esperLength, cfg);
+    applyBrightness(resampledSpecharm, paramArr, esperLength, cfg);
+    applyDynamics(resampledSpecharm, paramArr, tgtPitch, esperLength, cfg);
     float phase = 0;
-    renderVoiced(resampledSpecharm, resampledPitch, &phase, resampledWave, esperLength, cfg);
+    applyGrowl(resampledSpecharm, paramArr, &phase, esperLength, cfg);
+    applyRoughness(resampledSpecharm, paramArr, esperLength, cfg);
+
+
+    float* resampledWave = (float*)malloc(esperLength * cfg.batchSize * sizeof(float));
+    renderUnvoiced(resampledSpecharm, resampledExcitation, 0, resampledWave, esperLength, cfg);
+    phase = 0;
+    renderVoiced(resampledSpecharm, tgtPitch, &phase, resampledWave, esperLength, cfg);
     writeWavFile(args.outputPath, resampledWave, cfg.sampleRate, esperLength * cfg.batchSize);
     return 0;
 }

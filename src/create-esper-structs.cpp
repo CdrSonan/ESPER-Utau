@@ -88,7 +88,7 @@ cSampleCfg createCSampleCfg(int numSamples, engineCfg cfg, std::map<std::string,
 {
     cSampleCfg sampleCfg;
     sampleCfg.length = numSamples;
-    sampleCfg.batches = floor(numSamples / cfg.batchSize);
+    sampleCfg.batches = (numSamples / cfg.batchSize) + 1;//floor(numSamples / cfg.batchSize);
     sampleCfg.pitchLength = sampleCfg.batches;
     sampleCfg.pitch = 300;
     sampleCfg.isVoiced = 1;
