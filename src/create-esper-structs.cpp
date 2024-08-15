@@ -88,12 +88,12 @@ cSampleCfg createCSampleCfg(int numSamples, engineCfg cfg, std::map<std::string,
 {
     cSampleCfg sampleCfg;
     sampleCfg.length = numSamples;
-    sampleCfg.batches = (numSamples / cfg.batchSize) + 1;//floor(numSamples / cfg.batchSize);
+    sampleCfg.batches = (numSamples / cfg.batchSize) + 1;
     sampleCfg.pitchLength = sampleCfg.batches;
     sampleCfg.pitch = 300;
     sampleCfg.isVoiced = 1;
     sampleCfg.isPlosive = 0;
-    sampleCfg.useVariance = 0;
+    sampleCfg.useVariance = 1;
     sampleCfg.expectedPitch = 300.;
     if (iniCfg.find("expectedPitch") != iniCfg.end()) {
         sampleCfg.expectedPitch = std::stof(iniCfg["expectedPitch"]);

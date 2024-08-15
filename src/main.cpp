@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     engineCfg cfg = createEngineCfg(iniCfg);
     cSample sample;
     int espReadSuccess = 1;
-    if (iniCfg["useEspFiles"] == "true")
+    if (iniCfg["useEsperFiles"] == "true")
     {
         std::string espFilePath = args.inputPath + ".esp";
         espReadSuccess = readEspFile(espFilePath, sample, cfg);
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
         double avg_frq;
         std::vector<double> frequencies;
         std::vector<double> amplitudes;
-        std::string frqFilePath = args.inputPath + ".frq";
+        std::string frqFilePath = args.inputPath.substr(0, args.inputPath.find_last_of(".")) + "_wav.frq";
         if (iniCfg["useFrqFiles"] == "true")
         {
             frqReadSuccess = readFrqFile(frqFilePath, &avg_frq, &frequencies, &amplitudes);
@@ -47,13 +47,13 @@ int main(int argc, char* argv[]) {
             if ((iniCfg["createFrqFiles"] == "true" && !std::filesystem::exists(frqFilePath)) || iniCfg["overwriteFrqFiles"] == "true")
             {
                 getFrqFromSample(sample, frequencies, amplitudes, cfg);
-                writeFrqFile(frqFilePath, "Created by ESPER-Utau resampler", 256, cfg.sampleRate / sample.config.pitch, frequencies, amplitudes);
+                writeFrqFile(frqFilePath, "ESP-Utau", 256, cfg.sampleRate / sample.config.pitch, frequencies, amplitudes);
             }
         }
         specCalc(sample, cfg);
-        if ((iniCfg["createEspFiles"] == "true" && !std::filesystem::exists(args.outputPath + ".esp")) || iniCfg["overwriteEspFiles"] == "true")
+        if ((iniCfg["createEsperFiles"] == "true" && !std::filesystem::exists(args.inputPath + ".esp")) || iniCfg["overwriteEsperFiles"] == "true")
         {
-            writeEspFile(args.outputPath + ".esp", sample, cfg);
+            writeEspFile(args.inputPath + ".esp", sample, cfg);
         }
     }
 
@@ -91,9 +91,18 @@ int main(int argc, char* argv[]) {
     timings.start1 = 0;
     timings.start2 = 0;
     timings.start3 = 0;
-    timings.end1 = args.length - 1;
-    timings.end2 = args.length - 1;
-    timings.end3 = args.length - 1;
+    if (args.length > 22)
+    {
+        timings.end1 = args.length - 21;
+        timings.end2 = args.length - 11;
+        timings.end3 = args.length - 1;
+    }
+    else
+	{
+		timings.end1 = args.length - 3;
+		timings.end2 = args.length - 2;
+		timings.end3 = args.length - 1;
+	}
     timings.windowStart = 0;
     timings.windowEnd = args.length - 1;
     timings.offset = 0;
@@ -111,14 +120,54 @@ int main(int argc, char* argv[]) {
             resampledSpecharm[i * cfg.frameSize + cfg.halfHarmonics + j] += sample.avgSpecharm[j];
         }
     }
-    resampleSpecharm(sample.avgSpecharm, sample.specharm + (int)((args.offset) + args.consonant) * cfg.frameSize, (int)args.cutoff, steadinessArr, 0.5, 0, 0, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
+
+	float* effAvgSpecharm = (float*)malloc((cfg.halfHarmonics + cfg.halfTripleBatchSize + 1) * sizeof(float));
+	for (int i = 0; i < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; i++)
+	{
+		effAvgSpecharm[i] = 0.;
+	}
+	float* effSpecharm = (float*)malloc((int)args.cutoff * cfg.frameSize * sizeof(float));
+	for (int i = 0; i < (int)(args.cutoff); i++)
+	{
+		for (unsigned int j = 0; j < cfg.halfHarmonics; j++)
+		{
+			effSpecharm[i * cfg.frameSize + j] = sample.specharm[((int)(args.offset + args.consonant) + i) * cfg.frameSize + j] + sample.avgSpecharm[j];
+			effAvgSpecharm[j] += effSpecharm[i * cfg.frameSize + j];
+		}
+        for (unsigned int j = 0; j < cfg.halfHarmonics; j++)
+        {
+            effSpecharm[i * cfg.frameSize + cfg.halfHarmonics + j] = sample.specharm[((int)(args.offset + args.consonant) + i) * cfg.frameSize + cfg.halfHarmonics + j];
+        }
+		for (unsigned int j = 0; j < cfg.halfTripleBatchSize + 1; j++)
+		{
+			effSpecharm[i * cfg.frameSize + 2 * cfg.halfHarmonics + j] = sample.specharm[((int)(args.offset + args.consonant) + i) * cfg.frameSize + 2 * cfg.halfHarmonics + j] + sample.avgSpecharm[cfg.halfHarmonics + j];
+			effAvgSpecharm[cfg.halfHarmonics + j] += effSpecharm[i * cfg.frameSize + 2 * cfg.halfHarmonics + j];
+		}
+	}
+	for (int i = 0; i < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; i++)
+	{
+		effAvgSpecharm[i] /= (int)args.cutoff;
+	}
+	for (int i = 0; i < (int)(args.cutoff); i++)
+	{
+		for (unsigned int j = 0; j < cfg.halfHarmonics; j++)
+		{
+			effSpecharm[i * cfg.frameSize + j] -= effAvgSpecharm[j];
+		}
+		for (unsigned int j = 0; j < cfg.halfTripleBatchSize + 1; j++)
+		{
+			effSpecharm[i * cfg.frameSize + 2 * cfg.halfHarmonics + j] -= effAvgSpecharm[cfg.halfHarmonics + j];
+		}
+	}
+
+    resampleSpecharm(effAvgSpecharm, effSpecharm, (int)args.cutoff, steadinessArr, 0.5, 0, 1, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
 
     float* resampledPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(args.consonant); i++)
     {
         resampledPitch[i] = (float)(sample.pitchDeltas[(int)(args.offset) + i] - sample.config.pitch);
     }
-    resamplePitch(sample.pitchDeltas + (int)((args.offset) + args.consonant), (int)args.cutoff, (float)sample.config.pitch, 0.5, 0, 0, resampledPitch + (int)(args.consonant), args.length, timings);
+    resamplePitch(sample.pitchDeltas + (int)((args.offset) + args.consonant), (int)args.cutoff, (float)sample.config.pitch, 0.5, 0, 1, resampledPitch + (int)(args.consonant), args.length, timings);
 
     float* srcPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(esperLength); i++)
@@ -150,7 +199,7 @@ int main(int argc, char* argv[]) {
         }
     }
     std::cout << "sanity check: sample length:" << sample.config.batches << "offset:" << (int)(args.offset) << "consonant:" << (int)(args.consonant) << "cutoff:" << args.cutoff << std::endl;
-    float* resampledExcitation = (float*)malloc(esperLength * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));//TODO' fix excitation memory allocation, part passed to resampler, etc.
+    float* resampledExcitation = (float*)malloc(esperLength * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
     float* loopExcitationBase = (float*)malloc((int)args.cutoff * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
     memcpy(resampledExcitation,
         sample.excitation + (int)(args.offset) * (cfg.halfTripleBatchSize + 1),
@@ -164,7 +213,7 @@ int main(int argc, char* argv[]) {
     memcpy(loopExcitationBase + (int)args.cutoff * (cfg.halfTripleBatchSize + 1),
         sample.excitation + (int)(args.offset + args.consonant + args.length) * (cfg.halfTripleBatchSize + 1),
         (int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
-    resampleExcitation(loopExcitationBase, (int)args.cutoff, 0, 0, resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * 2, timings, cfg);
+    resampleExcitation(loopExcitationBase, (int)args.cutoff, 0, 1, resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * 2, timings, cfg);
     fuseConsecutiveExcitation(resampledExcitation, esperLength, (int)(args.consonant), cfg);
 
     pitchShift(resampledSpecharm, srcPitch, tgtPitch, formantShift, breathinessArr, esperLength, cfg);

@@ -48,7 +48,14 @@ void applyFrqToSample(cSample& sample, double avg_frq, std::vector<double> frequ
         double tgtIndex = (double)i / tgtLength * srcLength;
         int srcIndex = (int)tgtIndex;
         double srcWeight = tgtIndex - srcIndex;
-        sample.pitchDeltas[i] = (1 - srcWeight) * frequencies[srcIndex] + srcWeight * frequencies[srcIndex + 1];
+        if (srcIndex + 1 >= srcLength)
+		{
+			sample.pitchDeltas[i] = frequencies[srcIndex];
+		}
+        else
+        {
+            sample.pitchDeltas[i] = (1 - srcWeight) * frequencies[srcIndex] + srcWeight * frequencies[srcIndex + 1];
+        }
     }
     sample.config.pitch = config.sampleRate / avg_frq;
 }

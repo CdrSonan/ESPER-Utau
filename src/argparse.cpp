@@ -85,7 +85,7 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
             {
                 for (size_t j = supportedFlags[i].length(); j <= flagString.length(); j++)
                 {
-                    if (j == flagString.length() || !isdigit(flagString[j]))
+                    if (j == flagString.length() || (!isdigit(flagString[j]) && flagString[j] != '-'))
                     {
                         flags[supportedFlags[i]] = std::stoi(flagString.substr(supportedFlags[i].length(), j - supportedFlags[i].length()));
                         flagString = flagString.substr(j, flagString.length() - j);
