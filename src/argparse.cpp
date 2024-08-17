@@ -50,20 +50,20 @@ int noteToMidiPitch(std::string note) {
 std::map<std::string, int> parseFlagString(std::string flagString) {
     std::string supportedFlags[] =
     {
-        "lovl",
-        "loff",
+        "lovl",//
+        "loff",//
         "pstb",
-        "grwl",
-        "subh",
-        "std",
-        "bre",
+        "grwl",//
+        "subh",//
+        "std",//
+        "bre",//
         "int",
-        "dyn",
-        "bri",
-        "rgh",
+        "dyn",//
+        "bri",//
+        "rgh",//
         "g",
         "p",
-        "t",
+        "t",//
     };
     std::map<std::string, int> flags;
     bool warning = false;

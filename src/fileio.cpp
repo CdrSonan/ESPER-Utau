@@ -207,7 +207,7 @@ void writeEspFile(std::string path, cSample& sample, engineCfg config)
     fwrite(&header, sizeof(espFileHeader), 1, file);
     fwrite(sample.pitchDeltas, sizeof(float), sample.config.pitchLength, file);
     fwrite(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
-    fwrite(sample.avgSpecharm, sizeof(float), config.nHarmonics + config.halfTripleBatchSize + 3, file);
+    fwrite(sample.avgSpecharm, sizeof(float), config.halfHarmonics + config.halfTripleBatchSize + 1, file);
     fwrite(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);
     fclose(file);
 }
