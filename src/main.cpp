@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <random>
 #include <filesystem>
 #include <windows.h>
 
@@ -187,9 +188,22 @@ int main(int argc, char* argv[]) {
     resamplePitch(sample.pitchDeltas + (int)((args.offset) + args.consonant), (int)args.cutoff, (float)sample.config.pitch, loopOverlap, 0, 1, resampledPitch + (int)(args.consonant), args.length, timings);
 
     float* srcPitch = (float*)malloc(esperLength * sizeof(float));
+	float pitchDeviation = 0;
     for (int i = 0; i < (int)(esperLength); i++)
     {
         srcPitch[i] = resampledPitch[i] + sample.config.pitch;
+		
+		if (args.flags.find("pstb") != args.flags.end())
+        {
+            float randNum = 0;
+            for (int j = 0; j < 12; j++)
+            {
+                randNum += (float)rand() / RAND_MAX;
+            }
+            pitchDeviation += randNum;
+            pitchDeviation /= 2;
+            srcPitch[i] += pitchDeviation * (1. - (float)args.flags["pstb"] / 100.);
+        }
     }
     float* tgtPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(esperLength); i++)

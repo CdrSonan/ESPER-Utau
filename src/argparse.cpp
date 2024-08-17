@@ -52,7 +52,7 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
     {
         "lovl",//
         "loff",//
-        "pstb",
+        "pstb",//
         "grwl",//
         "subh",//
         "std",//
