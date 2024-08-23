@@ -90,8 +90,8 @@ int main(int argc, char* argv[]) {
         steadiness = (float)args.flags["std"] / 100.f;
     if (args.flags.find("bre") != args.flags.end())
         breathiness = (float)args.flags["bre"] / 100.f;
-    //TODO: calculate formant shift from INT and G flags
-	//modify srcPitch with G, formantShift with sum of INT and G (probably??)
+	if (args.flags.find("int") != args.flags.end())
+		formantShift = (float)args.flags["int"] / 100.f;
     for (int i = 0; i < esperLength; i++)
     {
         steadinessArr[i] = steadiness;
@@ -180,10 +180,14 @@ int main(int argc, char* argv[]) {
 
     resampleSpecharm(effAvgSpecharm, effSpecharm, (int)args.cutoff, steadinessArr, loopOverlap, 0, 1, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
 
+	for (int i = sample.config.pitchLength; i < sample.config.batches; i++)
+	{
+		sample.pitchDeltas[i] = sample.pitchDeltas[sample.config.pitchLength - 1];
+	}
     float* resampledPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(args.consonant); i++)
     {
-        resampledPitch[i] = (float)(sample.pitchDeltas[(int)(args.offset) + i] - sample.config.pitch);
+        resampledPitch[i] = (float)(sample.pitchDeltas[(int)(args.offset) + i] - (int)sample.config.pitch);
     }
     resamplePitch(sample.pitchDeltas + (int)((args.offset) + args.consonant), (int)args.cutoff, (float)sample.config.pitch, loopOverlap, 0, 1, resampledPitch + (int)(args.consonant), args.length, timings);
 
@@ -204,6 +208,10 @@ int main(int argc, char* argv[]) {
             pitchDeviation /= 2;
             srcPitch[i] += pitchDeviation * (1. - (float)args.flags["pstb"] / 100.);
         }
+		if (args.flags.find("g") != args.flags.end())
+		{
+			srcPitch[i] *= 1. + 0.5 * (float)args.flags["g"] / 100.;
+		}
     }
     float* tgtPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(esperLength); i++)
@@ -295,6 +303,37 @@ int main(int argc, char* argv[]) {
 			paramArr[i] = (float)args.flags["rgh"] / 100.f;
 		}
         applyRoughness(resampledSpecharm, paramArr, esperLength, cfg);
+	}
+
+	if (args.flags.find("p") != args.flags.end())
+	{
+		for (int i = 0; i < esperLength; i++)
+		{
+			float max = 0.f;
+			for (int j = 0; j < cfg.halfHarmonics; j++)
+			{
+				if (resampledSpecharm[i * cfg.frameSize + j] > max)
+				{
+					max = resampledSpecharm[i * cfg.frameSize + j];
+				}
+			}
+			for (int j = cfg.nHarmonics + 2; j < cfg.frameSize; j++)
+			{
+                if (resampledSpecharm[i * cfg.frameSize + j] > max)
+                {
+                    max = resampledSpecharm[i * cfg.frameSize + j];
+                }
+			}
+			max /= (float)args.flags["p"] + 1.f / 101.f * 3.14159;
+            for (int j = 0; j < cfg.halfHarmonics; j++)
+            {
+				resampledSpecharm[i * cfg.frameSize + j] = sin(resampledSpecharm[i * cfg.frameSize + j] / max) * max;
+            }
+            for (int j = cfg.nHarmonics + 2; j < cfg.frameSize; j++)
+            {
+                resampledSpecharm[i * cfg.frameSize + j] = sin(resampledSpecharm[i * cfg.frameSize + j] / max) * max;
+            }
+		}
 	}
 
     float* resampledWave = (float*)malloc(esperLength * cfg.batchSize * sizeof(float));
