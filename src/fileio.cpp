@@ -93,7 +93,13 @@ int readFrqFile(const std::string& filename, double* avg_frq, std::vector<double
         
         file.read(reinterpret_cast<char*>(&frequency), sizeof(frequency));
         file.read(reinterpret_cast<char*>(&amplitude), sizeof(amplitude));
-        frequencies->push_back(frequency);
+		if (frequency <= 0 || frequency > 12000) {
+			frequencies->push_back(*avg_frq);
+		}
+		else
+        {
+            frequencies->push_back(frequency);
+		}
         amplitudes->push_back(amplitude);
     }
 
@@ -141,6 +147,7 @@ void writeFrqFile(const std::string& filename, const std::string& header_text, i
 
 struct espFileHeader
 {
+    unsigned int filestd;
     unsigned int sampleRate;
     unsigned short tickRate;
     unsigned int batchSize;
@@ -152,7 +159,7 @@ struct espFileHeader
     int isPlosive;
 };
 
-int readEspFile(std::string path, cSample& sample, engineCfg config)
+int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg config)
 {
     //check if the file exists
     if (!std::filesystem::exists(path))
@@ -165,7 +172,8 @@ int readEspFile(std::string path, cSample& sample, engineCfg config)
     fread(&header, sizeof(espFileHeader), 1, file);
     
     // check if the file is valid under the current engine configuration
-    if (header.sampleRate != config.sampleRate ||
+	if (header.filestd != filestd ||
+        header.sampleRate != config.sampleRate ||
         header.tickRate != config.tickRate ||
         header.batchSize != config.batchSize ||
         header.nHarmonics != config.nHarmonics)
@@ -181,20 +189,21 @@ int readEspFile(std::string path, cSample& sample, engineCfg config)
     sample.config.isPlosive = header.isPlosive;
     sample.pitchDeltas = (int*)malloc(sample.config.pitchLength * sizeof(int));
     sample.specharm = (float*)malloc(sample.config.batches * config.frameSize * sizeof(float));
-    sample.avgSpecharm = (float*)malloc((config.nHarmonics + config.halfTripleBatchSize + 3) * sizeof(float));
+    sample.avgSpecharm = (float*)malloc((config.halfHarmonics + config.halfTripleBatchSize + 1) * sizeof(float));
     sample.excitation = (float*)malloc(sample.config.batches * (config.halfTripleBatchSize + 1) * 2 * sizeof(float));
-    fread(sample.pitchDeltas, sizeof(float), sample.config.pitchLength, file);
+    fread(sample.pitchDeltas, sizeof(int), sample.config.pitchLength, file);
     fread(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
-    fread(sample.avgSpecharm, sizeof(float), config.nHarmonics + config.halfTripleBatchSize + 3, file);
+    fread(sample.avgSpecharm, sizeof(float), config.halfHarmonics + config.halfTripleBatchSize + 1, file);
     fread(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);
     fclose(file);
     return 0;
 }
 
-void writeEspFile(std::string path, cSample& sample, engineCfg config)
+void writeEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg config)
 {
     FILE* file = fopen(path.c_str(), "wb");
     espFileHeader header;
+	header.filestd = filestd;
     header.sampleRate = config.sampleRate;
     header.tickRate = config.tickRate;
     header.batchSize = config.batchSize;
@@ -205,7 +214,7 @@ void writeEspFile(std::string path, cSample& sample, engineCfg config)
     header.isVoiced = sample.config.isVoiced;
     header.isPlosive = sample.config.isPlosive;
     fwrite(&header, sizeof(espFileHeader), 1, file);
-    fwrite(sample.pitchDeltas, sizeof(float), sample.config.pitchLength, file);
+    fwrite(sample.pitchDeltas, sizeof(int), sample.config.pitchLength, file);
     fwrite(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
     fwrite(sample.avgSpecharm, sizeof(float), config.halfHarmonics + config.halfTripleBatchSize + 1, file);
     fwrite(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);

@@ -1,7 +1,7 @@
 expressions:
   lovl:
     name: loop overlap
-    abbr: lovl
+    abbr: Elov
     type: Numerical
     min: 0
     max: 100
@@ -10,7 +10,7 @@ expressions:
     flag: lovl
   loff:
     name: loop offset
-    abbr: loff
+    abbr: Elof
     type: Numerical
     min: 0
     max: 100
@@ -19,7 +19,7 @@ expressions:
     flag: loff
   pstb:
     name: pitch stability
-    abbr: pstb
+    abbr: Epst
     type: Numerical
     min: -100
     max: 100
@@ -28,7 +28,7 @@ expressions:
     flag: pstb
   std:
     name: steadiness
-    abbr: std
+    abbr: Estd
     type: Numerical
     min: -100
     max: 100
@@ -37,7 +37,7 @@ expressions:
     flag: std
   bre:
     name: breathiness
-    abbr: bre
+    abbr: Ebre
     type: Numerical
     min: -100
     max: 100
@@ -46,7 +46,7 @@ expressions:
     flag: bre
   gen:
     name: gender
-    abbr: gen
+    abbr: Egen
     type: Numerical
     min: -100
     max: 100
@@ -55,7 +55,7 @@ expressions:
     flag: g
   int:
     name: intonation
-    abbr: intn
+    abbr: Eint
     type: Numerical
     min: 0
     max: 100
@@ -64,7 +64,7 @@ expressions:
     flag: int
   subh:
     name: subharmonics
-    abbr: subh
+    abbr: Esub
     type: Numerical
     min: -100
     max: 100
@@ -73,7 +73,7 @@ expressions:
     flag: subh
   pcmp:
     name: peak compressor
-    abbr: pcmp
+    abbr: Ecmp
     type: Numerical
     min: 0
     max: 100
@@ -81,8 +81,8 @@ expressions:
     is_flag: true
     flag: p
   dyn:
-    name: dynamics (esper)
-    abbr: dyn
+    name: dynamics
+    abbr: Edyn
     type: Numerical
     min: -100
     max: 100
@@ -91,16 +91,16 @@ expressions:
     flag: dyn
   bri:
     name: brightness
-    abbr: bri
+    abbr: Ebri
     type: Numerical
-    min: 0
+    min: -100
     max: 100
     default_value: 0
     is_flag: true
     flag: bri
   rgh:
     name: roughness
-    abbr: rghn
+    abbr: Ergh
     type: Numerical
     min: 0
     max: 100
@@ -109,7 +109,7 @@ expressions:
     flag: rgh
   grwl:
     name: growl
-    abbr: grwl
+    abbr: Egrw
     type: Numerical
     min: 0
     max: 100

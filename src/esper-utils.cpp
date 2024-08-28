@@ -64,8 +64,20 @@ void getFrqFromSample(cSample& sample, std::vector<double>& frequencies, std::ve
 {
     frequencies.clear();
     amplitudes.clear();
-    for (int i = 0; i < sample.config.pitchLength; i++) {
-        frequencies.push_back(config.sampleRate / sample.pitchDeltas[i]);
+	int srcLength = sample.config.pitchLength;  
+	int tgtLength = config.sampleRate / 256;
+	for (int i = 0; i < tgtLength; i++) {
+		double tgtIndex = (double)i / tgtLength * srcLength;
+		int srcIndex = (int)tgtIndex;
+		double srcWeight = tgtIndex - srcIndex;
+		if (srcIndex + 1 >= srcLength)
+		{
+			frequencies.push_back(sample.pitchDeltas[srcIndex]);
+		}
+		else
+		{
+			frequencies.push_back((1 - srcWeight) * sample.pitchDeltas[srcIndex] + srcWeight * sample.pitchDeltas[srcIndex + 1]);
+		}
         float amplitude = 0;
         for (int j = 0; j < 256; j++) {
             if (abs(sample.waveform[i * 256 + j]) > amplitude) {

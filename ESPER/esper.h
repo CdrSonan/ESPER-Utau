@@ -230,7 +230,7 @@ extern "C" LIBESPER_EXPORT void LIBESPER_CDECL resamplePitch(int* pitchDeltas, i
 //MODIFICATION FUNCTIONS
 
 //Given a specharm array and its length, this function applies a breathiness modification to it.
-extern "C" LIBESPER_EXPORT void LIBESPER_CDECL applyBreathiness(float* specharm, float* breathiness, int length, engineCfg config);
+extern "C" LIBESPER_EXPORT void LIBESPER_CDECL applyBreathiness(float* specharm, float* excitation, float* breathiness, int length, engineCfg config);
 
 /*This function applies a pitch shift to a specharm array.
   Arguments:

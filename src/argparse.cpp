@@ -21,10 +21,13 @@ int noteToMidiPitch(std::string note) {
         switch (noteStr[1]) {
             case '#':
                 halftone = 1;
+				break;
             case 'b':
                 halftone = -1;
+				break;
             default:
                 halftone = 0;
+				break;
         }
     }
     switch (noteStr[0]) {
@@ -61,7 +64,7 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
         "dyn",
         "bri",
         "rgh",
-        "g",
+        "gen",
         "p",
         "t",
     };
@@ -113,7 +116,7 @@ std::vector<int> decodeBase64(std::string base64String)
         {
             value -= 4096;
         }
-        result.push_back(value);
+        result.push_back(-value);
     }
     return result;
 }
@@ -127,6 +130,7 @@ std::vector<int> decodePitchBend(std::string pitchBendString)
         size_t splitIndex = pitchBendString.find('#');
         if (splitIndex == std::string::npos)
         {
+			substrings.push_back(pitchBendString);
             break;
         }
         substrings.push_back(pitchBendString.substr(0, splitIndex));
@@ -141,15 +145,16 @@ std::vector<int> decodePitchBend(std::string pitchBendString)
         {
             pitchBend.push_back(decoded[j]);
         }
-        //second substring is the number of repetitions, in plain text
+        //second substring is the number of repetitions, in plain texth
         if (i + 1 < substrings.size())
         {
             for (int j = 0; j < std::stoi(substrings[i + 1]); j++)
             {
-                for (int k = 0; k < decoded.size(); k++)
-                {
-                    pitchBend.push_back(decoded[k]);
-                }
+                //for (int k = 0; k < decoded.size(); k++)
+                //{
+                //    pitchBend.push_back(decoded[k]);
+                //}
+				pitchBend.push_back(pitchBend[pitchBend.size() - 1]);
             }
         }
     }
