@@ -12,6 +12,7 @@
 #include "esper.h"
 
 int main(int argc, char* argv[]) {
+	unsigned int espFileStd = 2;
     resamplerArgs args = parseArguments(argc, argv);
     std::map<std::string, std::string> iniCfg;
     readIniFile(args.rsmpDir + "\\esper-config.ini", &iniCfg);
@@ -22,7 +23,7 @@ int main(int argc, char* argv[]) {
     if (iniCfg["useEsperFiles"] == "true")
     {
         std::string espFilePath = args.inputPath + ".esp";
-        espReadSuccess = readEspFile(espFilePath, sample, cfg);
+        espReadSuccess = readEspFile(espFilePath, sample,espFileStd, cfg);
     }
     if (espReadSuccess != 0)
     {
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
         specCalc(sample, cfg);
         if ((iniCfg["createEsperFiles"] == "true" && !std::filesystem::exists(args.inputPath + ".esp")) || iniCfg["overwriteEsperFiles"] == "true")
         {
-            writeEspFile(args.inputPath + ".esp", sample, cfg);
+            writeEspFile(args.inputPath + ".esp", sample, espFileStd, cfg);
         }
     }
 
@@ -85,7 +86,7 @@ int main(int argc, char* argv[]) {
     float* breathinessArr = (float*)malloc(esperLength * sizeof(float));
     float* formantShiftArr = (float*)malloc(esperLength * sizeof(float));
     float steadiness = 0;
-    float breathiness = 0;
+    float breathiness = -25;
 	float formantShift = 0;
     if (args.flags.find("std") != args.flags.end())
         steadiness = (float)args.flags["std"] / 100.f;
@@ -267,12 +268,21 @@ int main(int argc, char* argv[]) {
     }
     float* resampledExcitation = (float*)malloc(esperLength * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
     float* loopExcitationBase = (float*)malloc((int)args.cutoff * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
-    memcpy(resampledExcitation,
+    /*memcpy(resampledExcitation,
         sample.excitation + (int)(args.offset) * (cfg.halfTripleBatchSize + 1),
         (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
     memcpy(resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1),
         sample.excitation + (int)(args.offset + sample.config.batches) * (cfg.halfTripleBatchSize + 1),
-        (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
+        (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * sizeof(float));*/
+    for (int i = 0; i < (int)(args.consonant) * (cfg.halfTripleBatchSize + 1); i++)
+    {
+		float real = *(sample.excitation + (int)(args.offset) * (cfg.halfTripleBatchSize + 1) + i);
+		float imag = *(sample.excitation + (int)(args.offset + sample.config.batches) * (cfg.halfTripleBatchSize + 1) + i);
+		float abs = sqrtf(real * real + imag * imag);
+		float angle = ((double)rand()) * 2. * 3.14159 / ((double)RAND_MAX);
+		*(resampledExcitation + i) = abs * cos(angle);
+		*(resampledExcitation + i + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1)) = abs * sin(angle);
+    }
     memcpy(loopExcitationBase,
         sample.excitation + (int)(args.offset + args.consonant) * (cfg.halfTripleBatchSize + 1),
         (int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));

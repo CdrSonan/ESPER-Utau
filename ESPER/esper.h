@@ -106,6 +106,7 @@ typedef struct
     unsigned int length;
     unsigned int batches;
     unsigned int pitchLength;
+    unsigned int markerLength;
     unsigned int pitch;
     int isVoiced;
     int isPlosive;
@@ -138,6 +139,7 @@ typedef struct
 {
     float* waveform;
     int* pitchDeltas;
+    int* pitchMarkers;
     float* specharm;
     float* avgSpecharm;
     float* excitation;
