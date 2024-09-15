@@ -6,6 +6,8 @@
 
 #include "create-esper-structs.hpp"
 
+#include "esper-utils.hpp"
+
 engineCfg createEngineCfg(std::map<std::string, std::string> iniCfg)
 {
     engineCfg cfg;
@@ -96,7 +98,22 @@ cSampleCfg createCSampleCfg(int numSamples, engineCfg cfg, std::map<std::string,
     sampleCfg.useVariance = 1;
     sampleCfg.expectedPitch = 300.;
     if (iniCfg.find("expectedPitch") != iniCfg.end()) {
-        sampleCfg.expectedPitch = std::stof(iniCfg["expectedPitch"]);
+		if (iniCfg["expectedPitch"] == "0" || iniCfg["expectedPitch"] == "auto" || iniCfg["expectedPitch"] == "Auto")
+        {
+			sampleCfg.expectedPitch = 0;
+		}
+        else
+        {
+            int midiPitch = noteToMidiPitch(iniCfg["expectedPitch"]);
+            if (midiPitch > 0)
+            {
+                sampleCfg.expectedPitch = 440. * pow(2., (midiPitch - 69) / 12.);
+            }
+            else
+            {
+                sampleCfg.expectedPitch = std::stof(iniCfg["expectedPitch"]);
+            }
+        }
     }
     sampleCfg.searchRange = 0.55;
     if (iniCfg.find("pitchSearchRange") != iniCfg.end()) {

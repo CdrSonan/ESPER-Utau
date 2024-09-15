@@ -154,6 +154,7 @@ struct espFileHeader
     unsigned int nHarmonics;
     unsigned int batches;
     unsigned int pitchLength;
+	unsigned int markerLength;
     unsigned int pitch;
     int isVoiced;
     int isPlosive;
@@ -180,18 +181,21 @@ int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineC
     {
         std::cerr << "Invalid ESP file for current config: " << path << std::endl;
         fclose(file);
-        exit(1);
+        return 1;
     }
     sample.config.batches = header.batches;
     sample.config.pitchLength = header.pitchLength;
+	sample.config.markerLength = header.markerLength;
     sample.config.pitch = header.pitch;
     sample.config.isVoiced = header.isVoiced;
     sample.config.isPlosive = header.isPlosive;
     sample.pitchDeltas = (int*)malloc(sample.config.pitchLength * sizeof(int));
+	sample.pitchMarkers = (int*)malloc(sample.config.markerLength * sizeof(int));
     sample.specharm = (float*)malloc(sample.config.batches * config.frameSize * sizeof(float));
     sample.avgSpecharm = (float*)malloc((config.halfHarmonics + config.halfTripleBatchSize + 1) * sizeof(float));
     sample.excitation = (float*)malloc(sample.config.batches * (config.halfTripleBatchSize + 1) * 2 * sizeof(float));
     fread(sample.pitchDeltas, sizeof(int), sample.config.pitchLength, file);
+	fread(sample.pitchMarkers, sizeof(int), sample.config.markerLength, file);
     fread(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
     fread(sample.avgSpecharm, sizeof(float), config.halfHarmonics + config.halfTripleBatchSize + 1, file);
     fread(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);
@@ -210,11 +214,13 @@ void writeEspFile(std::string path, cSample& sample, unsigned int filestd, engin
     header.nHarmonics = config.nHarmonics;
     header.batches = sample.config.batches;
     header.pitchLength = sample.config.pitchLength;
+	header.markerLength = sample.config.markerLength;
     header.pitch = sample.config.pitch;
     header.isVoiced = sample.config.isVoiced;
     header.isPlosive = sample.config.isPlosive;
     fwrite(&header, sizeof(espFileHeader), 1, file);
     fwrite(sample.pitchDeltas, sizeof(int), sample.config.pitchLength, file);
+	fwrite(sample.pitchMarkers, sizeof(int), sample.config.markerLength, file);
     fwrite(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
     fwrite(sample.avgSpecharm, sizeof(float), config.halfHarmonics + config.halfTripleBatchSize + 1, file);
     fwrite(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);

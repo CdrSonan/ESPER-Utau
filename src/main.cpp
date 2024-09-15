@@ -12,7 +12,7 @@
 #include "esper.h"
 
 int main(int argc, char* argv[]) {
-	unsigned int espFileStd = 2;
+	unsigned int espFileStd = 3;
     resamplerArgs args = parseArguments(argc, argv);
     std::map<std::string, std::string> iniCfg;
     readIniFile(args.rsmpDir + "\\esper-config.ini", &iniCfg);
@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
         std::string espFilePath = args.inputPath + ".esp";
         espReadSuccess = readEspFile(espFilePath, sample,espFileStd, cfg);
     }
+
     if (espReadSuccess != 0)
     {
         int numSamples;
@@ -43,9 +44,9 @@ int main(int argc, char* argv[]) {
                 applyFrqToSample(sample, avg_frq, frequencies, cfg);
             }
         }
+        pitchCalcFallback(&sample, cfg);
         if (frqReadSuccess != 0)
         {
-            pitchCalcFallback(&sample, cfg);
             if ((iniCfg["createFrqFiles"] == "true" && !std::filesystem::exists(frqFilePath)) || iniCfg["overwriteFrqFiles"] == "true")
             {
                 getFrqFromSample(sample, frequencies, amplitudes, cfg);
