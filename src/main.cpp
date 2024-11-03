@@ -324,35 +324,6 @@ int main(int argc, char* argv[]) {
 			}
         }
     }
-    float* resampledExcitation = (float*)malloc(esperLength * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
-    float* loopExcitationBase = (float*)malloc((int)args.cutoff * (cfg.halfTripleBatchSize + 1) * 2 * sizeof(float));
-    /*memcpy(resampledExcitation,
-        sample.excitation + (int)(args.offset) * (cfg.halfTripleBatchSize + 1),
-        (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * sizeof(float));
-    memcpy(resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1),
-        sample.excitation + (int)(args.offset + sample.config.batches) * (cfg.halfTripleBatchSize + 1),
-        (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * sizeof(float));*/
-    for (int i = 0; i < esperLength * (cfg.halfTripleBatchSize + 1) * 2; i++)
-    {
-        resampledExcitation[i] = 0.;
-    }
-    for (int i = 0; i < (int)(args.consonant) * (cfg.halfTripleBatchSize + 1); i++)
-    {
-		float real = *(sample.excitation + (int)(args.offset) * (cfg.halfTripleBatchSize + 1) + i);
-		float imag = *(sample.excitation + (int)(args.offset + sample.config.batches) * (cfg.halfTripleBatchSize + 1) + i);
-		float abs = sqrtf(real * real + imag * imag);
-		float angle = ((double)rand()) * 2. * 3.14159 / ((double)RAND_MAX);
-		*(resampledExcitation + i) = abs * cos(angle);
-		*(resampledExcitation + i + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1)) = abs * sin(angle);
-    }
-    memcpy(loopExcitationBase,
-        sample.excitation + (int)(args.offset + args.consonant) * (cfg.halfTripleBatchSize + 1),
-        (int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
-    memcpy(loopExcitationBase + (int)args.cutoff * (cfg.halfTripleBatchSize + 1),
-        sample.excitation + (int)(args.offset + args.consonant + args.length) * (cfg.halfTripleBatchSize + 1),
-        (int)args.cutoff * (cfg.halfTripleBatchSize + 1) * sizeof(float));
-    resampleExcitation(loopExcitationBase, (int)args.cutoff, 0, 1, resampledExcitation + (int)(args.consonant) * (cfg.halfTripleBatchSize + 1) * 2, timings, cfg);
-    fuseConsecutiveExcitation(resampledExcitation, esperLength, (int)(args.consonant), cfg);
 
     pitchShift(resampledSpecharm, srcPitch, tgtPitchMod, formantShiftArr, breathinessArr, esperLength, cfg);
 
@@ -369,7 +340,7 @@ int main(int argc, char* argv[]) {
     float* paramArr = (float*)malloc(esperLength * sizeof(float));
     if (args.flags.find("bre") != args.flags.end())
     {
-        applyBreathiness(resampledSpecharm, resampledExcitation, breathinessArr, esperLength, cfg);
+        applyBreathiness(resampledSpecharm, breathinessArr, esperLength, cfg);
 	}
 	if (args.flags.find("bri") != args.flags.end())
 	{
@@ -461,7 +432,7 @@ int main(int argc, char* argv[]) {
 	{
 		resampledWave[i] = 0;
 	}
-    renderUnvoiced(resampledSpecharm, resampledExcitation, 0, resampledWave, esperLength, cfg);
+    renderUnvoiced(resampledSpecharm, resampledWave, esperLength, cfg);
     phase = 0;
     renderVoiced(resampledSpecharm, tgtPitch, &phase, resampledWave, esperLength, cfg);
     writeWavFile(args.outputPath, resampledWave, cfg.sampleRate, esperLength * cfg.batchSize);

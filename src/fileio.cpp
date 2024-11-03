@@ -193,12 +193,10 @@ int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineC
 	sample.pitchMarkers = (int*)malloc(sample.config.markerLength * sizeof(int));
     sample.specharm = (float*)malloc(sample.config.batches * config.frameSize * sizeof(float));
     sample.avgSpecharm = (float*)malloc((config.halfHarmonics + config.halfTripleBatchSize + 1) * sizeof(float));
-    sample.excitation = (float*)malloc(sample.config.batches * (config.halfTripleBatchSize + 1) * 2 * sizeof(float));
     fread(sample.pitchDeltas, sizeof(int), sample.config.pitchLength, file);
 	fread(sample.pitchMarkers, sizeof(int), sample.config.markerLength, file);
     fread(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
     fread(sample.avgSpecharm, sizeof(float), config.halfHarmonics + config.halfTripleBatchSize + 1, file);
-    fread(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);
     fclose(file);
     return 0;
 }
@@ -223,6 +221,5 @@ void writeEspFile(std::string path, cSample& sample, unsigned int filestd, engin
 	fwrite(sample.pitchMarkers, sizeof(int), sample.config.markerLength, file);
     fwrite(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
     fwrite(sample.avgSpecharm, sizeof(float), config.halfHarmonics + config.halfTripleBatchSize + 1, file);
-    fwrite(sample.excitation, sizeof(float), sample.config.batches * (config.halfTripleBatchSize + 1) * 2, file);
     fclose(file);
 }
