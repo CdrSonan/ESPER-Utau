@@ -125,7 +125,12 @@ int main(int argc, char* argv[]) {
     loopOffset *= args.cutoff / 4.f;
 	args.cutoff -= 2. * loopOffset;
 	args.consonant += loopOffset;
-    int esperLength = args.length + (int)args.consonant;
+    int esperLength = args.length;// +(int)args.consonant;
+    if (esperLength <= (int)args.consonant + 1)
+	{
+		esperLength = (int)args.consonant + 2;
+	}
+	args.length = esperLength - (int)args.consonant;
 
     float* steadinessArr = (float*)malloc(esperLength * sizeof(float));
     float* breathinessArr = (float*)malloc(esperLength * sizeof(float));
@@ -158,12 +163,12 @@ int main(int argc, char* argv[]) {
     }
     else
 	{
-		timings.end1 = args.length - 3;
-		timings.end2 = args.length - 2;
-		timings.end3 = args.length - 1;
+		timings.end1 = args.length - 2;
+		timings.end2 = args.length - 1;
+		timings.end3 = args.length;
 	}
     timings.windowStart = 0;
-    timings.windowEnd = args.length - 1;
+    timings.windowEnd = args.length;
     timings.offset = 0;
 
 	fprintf(logFile, "Resampler setup complete. Copying data...\n");
@@ -432,9 +437,8 @@ int main(int argc, char* argv[]) {
 	{
 		resampledWave[i] = 0;
 	}
-    renderUnvoiced(resampledSpecharm, resampledWave, esperLength, cfg);
     phase = 0;
-    renderVoiced(resampledSpecharm, tgtPitch, &phase, resampledWave, esperLength, cfg);
+    render(resampledSpecharm, tgtPitch, &phase, resampledWave, esperLength, cfg);
     writeWavFile(args.outputPath, resampledWave, cfg.sampleRate, esperLength * cfg.batchSize);
 
 	fprintf(logFile, "Final render complete, exiting with code 0.\n");
