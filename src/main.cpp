@@ -15,11 +15,7 @@ int main(int argc, char* argv[]) {
 	unsigned int espFileStd = 4;
     resamplerArgs args = parseArguments(argc, argv);
 
-    FILE* logFile = fopen((args.outputPath + ".log").c_str(), "w");
-
     std::map<std::string, std::string> iniCfg;
-
-	fprintf(logFile, "Reading ini files\n");
 
     readIniFile(args.rsmpDir + "\\esper-config.ini", &iniCfg);
     readIniFile(args.inputPath.substr(0, args.rsmpDir.find_last_of("/\\")) + "\\resampler-config.ini", &iniCfg);
@@ -27,30 +23,17 @@ int main(int argc, char* argv[]) {
     cSample sample;
     int espReadSuccess = 1;
 
-	fprintf(logFile, "Reading ini files complete\n");
-
     if (iniCfg["useEsperFiles"] == "true")
     {
         std::string espFilePath = args.inputPath + ".esp";
-
-        fprintf(logFile, "Reading ESP file\n");
-
         espReadSuccess = readEspFile(espFilePath, sample, espFileStd, cfg);
-
-		fprintf(logFile, "Reading ESP file complete\n");
-
     }
 
     if (espReadSuccess != 0)
     {
-
-        fprintf(logFile, "Reading WAV file\n");
-
         int numSamples;
         float* wave = readWavFile(args.inputPath, &numSamples);
         sample = createCSample(wave, numSamples, cfg, iniCfg);
-
-		fprintf(logFile, "Reading WAV file complete\n");
 
         int frqReadSuccess = 1;
         double avg_frq;
@@ -59,24 +42,14 @@ int main(int argc, char* argv[]) {
         std::string frqFilePath = args.inputPath.substr(0, args.inputPath.find_last_of(".")) + "_wav.frq";
         if (iniCfg["useFrqFiles"] == "true")
         {
-
-			fprintf(logFile, "Reading FRQ file\n");
-
             frqReadSuccess = readFrqFile(frqFilePath, &avg_frq, &frequencies, &amplitudes);
-
-			fprintf(logFile, "Reading FRQ file complete. avg. frq is %d\n", avg_frq);
-
             if (frqReadSuccess == 0)
             {
                 applyFrqToSample(sample, avg_frq, frequencies, cfg);
             }
         }
 
-		fprintf(logFile, "Calculating pitch\n");
-
-        pitchCalcFallback(&sample, cfg);
-
-		fprintf(logFile, "Calculating pitch complete\n");
+		pitchCalcFallback(&sample, cfg);
 
 		sample.pitchMarkers = (int*)realloc(sample.pitchMarkers, sample.config.markerLength * sizeof(int));
 
@@ -89,22 +62,18 @@ int main(int argc, char* argv[]) {
             }
         }
 
-		fprintf(logFile, "Calculating spectra\n");
+		specCalc(sample, cfg);
 
-        specCalc(sample, cfg);
-
-		fprintf(logFile, "Calculating spectra complete\n");
-
-        if ((iniCfg["createEsperFiles"] == "true" && !std::filesystem::exists(args.inputPath + ".esp")) || iniCfg["overwriteEsperFiles"] == "true")
+		if ((iniCfg["createEsperFiles"] == "true" && !std::filesystem::exists(args.inputPath + ".esp")) || iniCfg["overwriteEsperFiles"] == "true")
         {
             writeEspFile(args.inputPath + ".esp", sample, espFileStd, cfg);
         }
     }
 
 
-	fprintf(logFile, "Analysis complete. Resampling...\n");
+	//analysis complete, now perform resampling
 
-    args.length *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
+	args.length *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
     args.consonant *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
     args.offset *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
     args.cutoff *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
@@ -171,8 +140,6 @@ int main(int argc, char* argv[]) {
     timings.windowEnd = args.length;
     timings.offset = 0;
 
-	fprintf(logFile, "Resampler setup complete. Copying data...\n");
-
     float* resampledSpecharm = (float*)malloc(esperLength * cfg.frameSize * sizeof(float));
     memcpy(resampledSpecharm, sample.specharm + (int)(args.offset) * cfg.frameSize, (int)(args.consonant) * cfg.frameSize * sizeof(float));
     for (int i = 0; i < (int)(args.consonant); i++)
@@ -232,12 +199,7 @@ int main(int argc, char* argv[]) {
 		loopOverlap = (float)args.flags["lovl"] / 101.f;
 	}
 
-
-	fprintf(logFile, "Resampling specharm...\n");
-
     resampleSpecharm(effAvgSpecharm, effSpecharm, (int)args.cutoff, steadinessArr, loopOverlap, 0, 1, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
-
-	fprintf(logFile, "Resampling specharm complete\n");
 
 	for (int i = sample.config.pitchLength; i < sample.config.batches; i++)
 	{
@@ -255,11 +217,7 @@ int main(int argc, char* argv[]) {
         resampledPitch[i] = (float)(sample.pitchDeltas[(int)(args.offset) + i] - meanPitch);
     }
 
-	fprintf(logFile, "Resampling pitch...\n");
-
     resamplePitch(sample.pitchDeltas + (int)((args.offset) + args.consonant), (int)args.cutoff, meanPitch, loopOverlap, 0, 1, resampledPitch + (int)(args.consonant), args.length, timings);
-
-	fprintf(logFile, "Resampling pitch complete\n");
 
     if (args.flags.find("pstb") != args.flags.end())
     {
@@ -332,7 +290,6 @@ int main(int argc, char* argv[]) {
 
     pitchShift(resampledSpecharm, srcPitch, tgtPitchMod, formantShiftArr, breathinessArr, esperLength, cfg);
 
-	fprintf(logFile, "Applying effects...\n");
     float subharmonics = 1.f;
     if (args.flags.find("subh") != args.flags.end())
     {
@@ -430,8 +387,6 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	fprintf(logFile, "Applying effects complete, performing final render...\n");
-
     float* resampledWave = (float*)malloc(esperLength * cfg.batchSize * sizeof(float));
 	for (int i = 0; i < esperLength * cfg.batchSize; i++)
 	{
@@ -440,9 +395,6 @@ int main(int argc, char* argv[]) {
     phase = 0;
     render(resampledSpecharm, tgtPitch, &phase, resampledWave, esperLength, cfg);
     writeWavFile(args.outputPath, resampledWave, cfg.sampleRate, esperLength * cfg.batchSize);
-
-	fprintf(logFile, "Final render complete, exiting with code 0.\n");
-	fclose(logFile);
 
     return 0;
 }
