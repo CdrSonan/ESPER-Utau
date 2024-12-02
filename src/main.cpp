@@ -273,6 +273,10 @@ int main(int argc, char* argv[]) {
                 tgtPitch[i] -= pitchDeviation * (float)args.flags["pstb"] / 100.;
             }
         }
+		if (tgtPitch[i] < 10.)
+		{
+            tgtPitch[i] = 10.;
+		}
 		tgtPitchMod[i] = tgtPitch[i];
         if (args.flags.find("gen") != args.flags.end())
         {
