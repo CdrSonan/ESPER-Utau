@@ -13,16 +13,16 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
         "lovl",
         "loff",
         "pstb",
-        "grwl",
-        "subh",
         "std",
         "bre",
+        "g",
         "int",
+        "subh",
+        "p",
         "dyn",
         "bri",
         "rgh",
-        "gen",
-        "p",
+        "grwl",
         "t",
     };
     std::map<std::string, int> flags;
@@ -138,4 +138,3 @@ resamplerArgs parseArguments(int argc, char* argv[]) {
     args.pitchBend = decodePitchBend(std::string(argv[13]));
     return args;
 }
-
