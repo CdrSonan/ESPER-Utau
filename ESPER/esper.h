@@ -43,19 +43,9 @@ tickRate: the number of processing windows per second of audio. Should be as clo
 batchSize: the number of samples per processing window. Numbers with low prime factors improve performance.
 tripleBatchSize: HAS to be exactly 3 times batchSize. The lowest frequency the engine can properly process is given by sampleRate/tripleBatchSize.
 halfTripleBatchSize: HAS to be exactly tripleBatchSize/2.
-filterBSMult: additional multiplier for the window size used during DIO pitch marker calculation.
-DIOBias: legacy bias parameter for DIO pitch marker calculation. No effect in the current version.
-DIOBias2: current DIO bias parameter DIO pitch marker calculation. Higher values favor marker candidates near the expected pitch more.
-DIOTolerance: the maximum allowed deviation from the expected pitch for a marker candidate to be considered.
-DIOLastWinTolerance: same as DIO tolerance, for the last window of a sample.
-filterTEEMult: legacy multiplier used during true envelope estimation. No effect in the current version.
-filterHRSSMult: legacy multiplier used during voiced-unvoiced separation. No effect in the current version.
 nHarmonics: the number of voiced harmonics to be extracted from a sample.
 halfHarmonics: HAS to be exactly nHarmonics/2 + 1.
 frameSize: HAS to be exactly nHarmonics + halfTripleBatchSize + 3.
-ampContThreshold: the threshold for the amplitude continuity check used during voiced-unvoiced separation. No effect in the current version, but reinclusion planned for future versions.
-spectralRolloff1: number of the frequency bin at which to begin substituting the true envelope for a running mean spectrum. Used when combining "low" and "high" spectra.
-spectralRolloff2: number of the frequency bin at which to begin fully replacing the true envelope with a running mean spectrum.
 breCompPremul: the pre-multiplier applied to the compensation term used with positive breathiness values. Higher values increase the volume of unvoiced sounds when using positive breathiness.
 */
 typedef struct
@@ -65,19 +55,9 @@ typedef struct
     unsigned int batchSize;
     unsigned int tripleBatchSize;
     unsigned int halfTripleBatchSize;
-    unsigned short filterBSMult;
-    float DIOBias;
-    float DIOBias2;
-    float DIOTolerance;
-    float DIOLastWinTolerance;
-    unsigned short filterTEEMult;
-    unsigned short filterHRSSMult;
     unsigned int nHarmonics;
     unsigned int halfHarmonics; //expected to be nHarmonics/2 + 1 (to account for DC offset after rfft)
     unsigned int frameSize; //expected to be nHarmonics + halfTripleBatchSize + 3 for joint harmonics + spectrum representation
-    unsigned int ampContThreshold;
-    unsigned int spectralRolloff1;
-    unsigned int spectralRolloff2;
     float breCompPremul;
 }
 engineCfg;
@@ -89,17 +69,14 @@ members:
 length: the length of the audio sample in samples.
 batches: the length of the audio sample in batches. Should be floor(length/batchSize).
 pitchLength: the length of the pitchDeltas array of the sample. Should be roughly equal to batches.
+markerLength: the length of the pitchMarkers array of the sample.
 pitch: the pitch of the sample as a wavelength in samples. Should be the average of the pitchDeltas array.
 isVoiced: whether the sample is voiced or unvoiced. 1 for voiced, 0 for unvoiced.
 isPlosive: whether the sample is a plosive sound. 1 for plosive, 0 for non-plosive. Only used in Nova-Vox, no effect in any ESPER functions.
 useVariance: whether to apply an additional postprocessing step to dampen spectrum and harmonic outliers. 1 if yes, 0 if no.
 expectedPitch: the expected pitch of the sample in Hz.
 searchRange: the range around the expected pitch in which to search for pitch markers. The range is determined as [expectedPitch*searchRange, expectedPitch/searchRange].
-voicedThrh: the threshold for the voiced-unvoiced separation. Higher values classify more of the sample as unvoiced.
-specWidth: filter width used for smoothing the high sections of the spectrum.
-specDepth: how often to apply the true envelope and running mean filters to the spectrum.
 tempWidth: filter width used for temporal smoothing between spectra.
-tempDepth: how often to apply temporal smoothing between spectra.
 */
 typedef struct
 {
@@ -113,11 +90,7 @@ typedef struct
     int useVariance;
     float expectedPitch;
     float searchRange;
-    float voicedThrh;
-    unsigned short specWidth;
-    unsigned short specDepth;
     unsigned short tempWidth;
-    unsigned short tempDepth;
 }
 cSampleCfg;
 
@@ -127,10 +100,11 @@ struct holding an audio sample and its settings.
 members:
 waveform: the audio sample as an array of floats.
 pitchDeltas: an array describing the pitch of the sample as wavelengths measured as a number of samples. Each element should roughly correspond to the pitch of a processing window.
+pitchMarkers: an array of pitch markers used to determine the pitch of the sample. Each element marks a border between two pitch periods.
 specharm: This array combines three sections for each processing window:
 - the deviation of the harmonic amplitudes from their average
 - the phase of the harmonics, relative to the f0 phase
-- the deviation of the overall spectrum of the sample from the average.
+- the deviation of the average fourier coefficients of the unvoiced part of the sample from the average of the entire sample.
 avgSpecharm: the average harmonic amplitudes and spectrum of the sample.
 config: the configuration object for the sample.
 */
@@ -173,10 +147,10 @@ segmentTiming;
 
 //ANALYSIS FUNCTIONS
 
-//Given a sample and its configuration, this function determines the pitch and fills the pitchDeltas array and related fields.
+//Given a sample and its configuration, this function determines the pitch and fills the pitchMarkers and pitchDeltas arrays and related fields.
 extern "C" LIBESPER_EXPORT void LIBESPER_CDECL pitchCalcFallback(cSample* sample, engineCfg config);
 
-//Main function of this library. Given a sample and its configuration, this function determines its spectrum, harmonics and residuals, and writes them to the appropriate fields.
+//Main function of this library. Given a sample and its configuration, this function determines its voiced harmonics and unvoiced residuals, and writes them to the appropriate fields.
 extern "C" LIBESPER_EXPORT void LIBESPER_CDECL specCalc(cSample sample, engineCfg config);
 
 
@@ -248,8 +222,7 @@ extern "C" LIBESPER_EXPORT void LIBESPER_CDECL applyRoughness(float* specharm, f
 
 //RENDERING FUNCTIONS
 
-//Given a specharm array and an excitation array, this function renders the unvoiced portion of the sample into the target array.
-//the "premultiplied" argument specifies whether the excitation array is already multiplied by the spectrum before this function is called.
+//Given a specharm array, this function renders the unvoiced portion of the sample into the target array.
 extern "C" LIBESPER_EXPORT void LIBESPER_CDECL renderUnvoiced(float* specharm, float* target, int length, engineCfg config);
 
 /*Render the voiced portion of the sample into the target array.

@@ -12,29 +12,38 @@
 #include "esper.h"
 
 int main(int argc, char* argv[]) {
-	unsigned int espFileStd = 4;
+    //declare ESP file standard of the current engine version
+	unsigned int espFileStd = 5;
+	//parse command line arguments
     resamplerArgs args = parseArguments(argc, argv);
 
+	//read configuration files in order of priority
     std::map<std::string, std::string> iniCfg;
-
     readIniFile(args.rsmpDir + "\\esper-config.ini", &iniCfg);
     readIniFile(args.inputPath.substr(0, args.rsmpDir.find_last_of("/\\")) + "\\resampler-config.ini", &iniCfg);
     engineCfg cfg = createEngineCfg(iniCfg);
-    cSample sample;
-    int espReadSuccess = 1;
 
+    //create sample object
+    cSample sample;
+
+	//read ESP file if necessary and it exists
+    int espReadSuccess = 1;
     if (iniCfg["useEsperFiles"] == "true")
     {
         std::string espFilePath = args.inputPath + ".esp";
         espReadSuccess = readEspFile(espFilePath, sample, espFileStd, cfg);
     }
 
-    if (espReadSuccess != 0)
+	if (espReadSuccess != 0) //no ESP file found or reading failed -> perform analysis to get the same data
     {
+		//read WAV file
         int numSamples;
         float* wave = readWavFile(args.inputPath, &numSamples);
+
+		//load into sample object
         sample = createCSample(wave, numSamples, cfg, iniCfg);
 
+		//attempt to read .frq file
         int frqReadSuccess = 1;
         double avg_frq;
         std::vector<double> frequencies;
@@ -49,10 +58,12 @@ int main(int argc, char* argv[]) {
             }
         }
 
+		//regardless of whether the .frq file was read, perform pitch calculation to get pitch markers
+		//if an .frq file was read, only its average pitch will be used as the expected pitch, all other data is discarded
 		pitchCalcFallback(&sample, cfg);
-
 		sample.pitchMarkers = (int*)realloc(sample.pitchMarkers, sample.config.markerLength * sizeof(int));
 
+		//write pitch data to a new .frq file if necessary
         if (frqReadSuccess != 0)
         {
             if ((iniCfg["createFrqFiles"] == "true" && !std::filesystem::exists(frqFilePath)) || iniCfg["overwriteFrqFiles"] == "true")
@@ -62,8 +73,10 @@ int main(int argc, char* argv[]) {
             }
         }
 
+		//perform spectral analysis
 		specCalc(sample, cfg);
 
+		//write sample data to a new ESP file if necessary
 		if ((iniCfg["createEsperFiles"] == "true" && !std::filesystem::exists(args.inputPath + ".esp")) || iniCfg["overwriteEsperFiles"] == "true")
         {
             writeEspFile(args.inputPath + ".esp", sample, espFileStd, cfg);
@@ -73,10 +86,13 @@ int main(int argc, char* argv[]) {
 
 	//analysis complete, now perform resampling
 
+    //convert milliseconds to ESPER frames
 	args.length *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
     args.consonant *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
     args.offset *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
     args.cutoff *= (float)cfg.sampleRate / (float)cfg.batchSize / 1000.f;
+
+	//handle negative cutoff values
     if (args.cutoff < 0)
     {
         args.cutoff *= -1;
@@ -85,6 +101,8 @@ int main(int argc, char* argv[]) {
     {
         args.cutoff = sample.config.batches - args.offset - args.cutoff;
     }
+
+    //read resampling flags
     float loopOffset = 0.f;
     if (args.flags.find("loff") != args.flags.end())
     {
@@ -101,6 +119,7 @@ int main(int argc, char* argv[]) {
 	}
 	args.length = esperLength - (int)args.consonant;
 
+    //create arrays for curve parameters given as flags
     float* steadinessArr = (float*)malloc(esperLength * sizeof(float));
     float* breathinessArr = (float*)malloc(esperLength * sizeof(float));
     float* formantShiftArr = (float*)malloc(esperLength * sizeof(float));
@@ -120,6 +139,7 @@ int main(int argc, char* argv[]) {
 		formantShiftArr[i] = formantShift;
     }
 
+    //create generic timing object
     segmentTiming timings;
     timings.start1 = 0;
     timings.start2 = 0;
@@ -140,7 +160,10 @@ int main(int argc, char* argv[]) {
     timings.windowEnd = args.length;
     timings.offset = 0;
 
+	//resample specharm
     float* resampledSpecharm = (float*)malloc(esperLength * cfg.frameSize * sizeof(float));
+
+    //copy consonant part wwithout resampling
     memcpy(resampledSpecharm, sample.specharm + (int)(args.offset) * cfg.frameSize, (int)(args.consonant) * cfg.frameSize * sizeof(float));
     for (int i = 0; i < (int)(args.consonant); i++)
     {
@@ -154,6 +177,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    //calculate correct average of vowel part for resampling
 	float* effAvgSpecharm = (float*)malloc((cfg.halfHarmonics + cfg.halfTripleBatchSize + 1) * sizeof(float));
 	for (int i = 0; i < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; i++)
 	{
@@ -193,14 +217,17 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+    //loop overlap flag
 	float loopOverlap = 0.5;
 	if (args.flags.find("lovl") != args.flags.end())
 	{
 		loopOverlap = (float)args.flags["lovl"] / 101.f;
 	}
 
+	//resample vowel part
     resampleSpecharm(effAvgSpecharm, effSpecharm, (int)args.cutoff, steadinessArr, loopOverlap, 0, 1, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
 
+    //resample pitch
 	for (int i = sample.config.pitchLength; i < sample.config.batches; i++)
 	{
 		sample.pitchDeltas[i] = sample.pitchDeltas[sample.config.pitchLength - 1];
@@ -216,9 +243,9 @@ int main(int argc, char* argv[]) {
     {
         resampledPitch[i] = (float)(sample.pitchDeltas[(int)(args.offset) + i] - meanPitch);
     }
-
     resamplePitch(sample.pitchDeltas + (int)((args.offset) + args.consonant), (int)args.cutoff, meanPitch, loopOverlap, 0, 1, resampledPitch + (int)(args.consonant), args.length, timings);
 
+	//modify pitch with stability flag
     if (args.flags.find("pstb") != args.flags.end())
     {
         if (args.flags["pstb"] > 0)
@@ -229,6 +256,9 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+
+    //derive source, target and modified target pitch arrays for pitch shifting
+    //modified target pitch array is used by the pitch shift function, target pitch array is used for rendering
     float* srcPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(esperLength); i++)
     {
@@ -292,8 +322,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
+	//apply pitch shift
     pitchShift(resampledSpecharm, srcPitch, tgtPitchMod, formantShiftArr, breathinessArr, esperLength, cfg);
 
+    //apply other effects
     float subharmonics = 1.f;
     if (args.flags.find("subh") != args.flags.end())
     {
@@ -391,6 +423,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+    //final rendering
     float* resampledWave = (float*)malloc(esperLength * cfg.batchSize * sizeof(float));
 	for (int i = 0; i < esperLength * cfg.batchSize; i++)
 	{
@@ -398,6 +431,8 @@ int main(int argc, char* argv[]) {
 	}
     phase = 0;
     render(resampledSpecharm, tgtPitch, &phase, resampledWave, esperLength, cfg);
+
+	//write output to file
     writeWavFile(args.outputPath, resampledWave, cfg.sampleRate, esperLength * cfg.batchSize);
 
     return 0;

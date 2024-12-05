@@ -6,6 +6,8 @@
 
 #include "esper-utils.hpp"
 
+//applies the contents of a .frq pitch curve file to a sample, overwriting its pitchDeltas, expectedPitch, and pitch attributes
+//Note that the pitchMarkers attribute is NOT overwritten, meaning this method is unsuitable as a replacement for a full pitch calculation as done in libESPER.
 void applyFrqToSample(cSample& sample, double avg_frq, std::vector<double> frequencies, engineCfg config)
 {
     for (int i = 0; i < frequencies.size(); i++) {
@@ -32,6 +34,8 @@ void applyFrqToSample(cSample& sample, double avg_frq, std::vector<double> frequ
     sample.config.pitch = config.sampleRate / avg_frq;
 }
 
+//generates frequency and amplitude arrays from a sample's pitchDeltas and waveform attributes
+//The result is intended to be written to a .frq file.
 void getFrqFromSample(cSample& sample, std::vector<double>& frequencies, std::vector<double>& amplitudes, engineCfg config)
 {
     frequencies.clear();
@@ -60,6 +64,9 @@ void getFrqFromSample(cSample& sample, std::vector<double>& frequencies, std::ve
     }
 }
 
+//converts a note string to a MIDI pitch value
+//Assumes American note names written in uppercase, and followed by accidentals (if present), then an octave number, even if an alternative notation exists.
+//Valid examples: "C4", "D#5", "Fb3". Invalid examples: "c4", "D5#", "Fb", "H3".
 int noteToMidiPitch(std::string note) {
     std::string noteStr = "";
     std::string octaveStr = "";
@@ -105,6 +112,7 @@ int noteToMidiPitch(std::string note) {
     }
 }
 
+//converts a MIDI pitch value to an ESPER wavelength format pitch value
 float midiPitchToEsperPitch(float pitch, engineCfg config)
 {
 	return (float)config.sampleRate / (440 * pow(2, (pitch - 69 + 12) / 12));

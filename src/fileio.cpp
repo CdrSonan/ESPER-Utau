@@ -12,6 +12,8 @@
 
 #include "fileio.hpp"
 
+//Read a WAV file and return the samples as a float array
+//If the file contains multiple channels, only the first channel is read
 float* readWavFile(const std::string& path, int* numSamples) {
     AudioFile<float> audioFile;
     audioFile.load(path);
@@ -23,6 +25,7 @@ float* readWavFile(const std::string& path, int* numSamples) {
     return samples;
 }
 
+//Write a float array to a mono WAV file
 void writeWavFile(const std::string& path, float* samples, int sampleRate, int numSamples) {
     std::vector<std::vector<float>> sampleVec;
     sampleVec.push_back(std::vector<float>(samples, samples + numSamples));
@@ -32,6 +35,8 @@ void writeWavFile(const std::string& path, float* samples, int sampleRate, int n
     audioFile.save(path);
 }
 
+//Read an INI file and store the key-value pairs in a map
+//Sections are ignored, so if a key is present in multiple sections, only thelast occurence will be saved
 void readIniFile(const std::string& path, std::map<std::string, std::string>* iniMap) {
     std::ifstream file(path);
     std::string line;
@@ -57,6 +62,7 @@ void readIniFile(const std::string& path, std::map<std::string, std::string>* in
     }
 }
 
+//Read a .frq file following the UTAU standard and store the data in the provided frequency and amplitude vectors, and the avg_frq variable
 int readFrqFile(const std::string& filename, double* avg_frq, std::vector<double>* frequencies, std::vector<double>* amplitudes) {
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
@@ -88,6 +94,7 @@ int readFrqFile(const std::string& filename, double* avg_frq, std::vector<double
     int num_chunks;
     file.read(reinterpret_cast<char*>(&num_chunks), sizeof(num_chunks));
 
+	// Frequency and amplitude pairs.
     double frequency, amplitude;
     for (int i = 0; i < num_chunks; ++i) {
         
@@ -107,6 +114,8 @@ int readFrqFile(const std::string& filename, double* avg_frq, std::vector<double
     return 0;
 }
 
+//Write pitch and amplitude data to a .frq file.
+//samples_per_frq must be 256 to match the UTAU standard, and the header text must be exactly 8 characters long.
 void writeFrqFile(const std::string& filename, const std::string& header_text, int samples_per_frq, double avg_frq, const std::vector<double>& frequencies, const std::vector<double>& amplitudes) {
     if (frequencies.size() != amplitudes.size()) {
         std::cerr << "Frequencies and amplitudes vectors must be of the same size." << std::endl;
@@ -145,6 +154,7 @@ void writeFrqFile(const std::string& filename, const std::string& header_text, i
     std::cout << "Successfully wrote frq file!" << std::endl;
 }
 
+//Struct representing the header of an ESP file. Contains the required metadata to read the file and verify its compatibility with the current engine version and configuration.
 struct espFileHeader
 {
     unsigned int filestd;
@@ -160,6 +170,8 @@ struct espFileHeader
     int isPlosive;
 };
 
+//Read an ESP file and store the data in the provided cSample object
+//the filestd parameter is used to verify the compatibility of the file with the current engine version
 int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg config)
 {
     //check if the file exists
@@ -201,6 +213,7 @@ int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineC
     return 0;
 }
 
+//writes the contents of a cSample object to an ESP file
 void writeEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg config)
 {
     FILE* file = fopen(path.c_str(), "wb");
