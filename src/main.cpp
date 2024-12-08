@@ -1,9 +1,9 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <cstring>
 #include <random>
 #include <filesystem>
-#include <windows.h>
 
 #include "argparse.hpp"
 #include "fileio.hpp"
