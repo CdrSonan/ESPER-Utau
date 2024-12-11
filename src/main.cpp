@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
             if ((iniCfg["createFrqFiles"] == "true" && !std::filesystem::exists(frqFilePath)) || iniCfg["overwriteFrqFiles"] == "true")
             {
                 getFrqFromSample(sample, frequencies, amplitudes, cfg);
-                writeFrqFile(frqFilePath, "ESP-Utau", 256, cfg.sampleRate / sample.config.pitch, frequencies, amplitudes);
+                writeFrqFile(frqFilePath, "FREQ0003", 256, cfg.sampleRate / sample.config.pitch, frequencies, amplitudes);
             }
         }
 
@@ -183,13 +183,16 @@ int main(int argc, char* argv[]) {
 	{
 		effAvgSpecharm[i] = 0.;
 	}
-	float* effSpecharm = (float*)malloc((int)args.cutoff * cfg.frameSize * sizeof(float));
+	float* effSpecharm = (float*)malloc((int)(args.cutoff) * cfg.frameSize * sizeof(float));
 	for (int i = 0; i < (int)(args.cutoff); i++)
 	{
 		for (unsigned int j = 0; j < cfg.halfHarmonics; j++)
 		{
 			effSpecharm[i * cfg.frameSize + j] = sample.specharm[((int)(args.offset + args.consonant) + i) * cfg.frameSize + j] + sample.avgSpecharm[j];
-			effAvgSpecharm[j] += effSpecharm[i * cfg.frameSize + j];
+			if (i < args.length)
+			{
+				effAvgSpecharm[j] += effSpecharm[i * cfg.frameSize + j];
+			}
 		}
         for (unsigned int j = 0; j < cfg.halfHarmonics; j++)
         {
@@ -198,13 +201,30 @@ int main(int argc, char* argv[]) {
 		for (unsigned int j = 0; j < cfg.halfTripleBatchSize + 1; j++)
 		{
 			effSpecharm[i * cfg.frameSize + 2 * cfg.halfHarmonics + j] = sample.specharm[((int)(args.offset + args.consonant) + i) * cfg.frameSize + 2 * cfg.halfHarmonics + j] + sample.avgSpecharm[cfg.halfHarmonics + j];
-			effAvgSpecharm[cfg.halfHarmonics + j] += effSpecharm[i * cfg.frameSize + 2 * cfg.halfHarmonics + j];
+			if (i < args.length)
+			{
+				effAvgSpecharm[cfg.halfHarmonics + j] += effSpecharm[i * cfg.frameSize + 2 * cfg.halfHarmonics + j];
+			}
 		}
 	}
-	for (int i = 0; i < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; i++)
+
+    int loopLength = (int)(args.cutoff);
+    if (loopLength > args.length)
+    {
+        loopLength = args.length;
+    }
+    for (int i = 0; i < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; i++)
+    {
+        effAvgSpecharm[i] /= loopLength;
+    }
+	float totalAmplitude = 0.;
+	for (int i = 0; i < cfg.halfHarmonics; i++)
 	{
-		effAvgSpecharm[i] /= (int)args.cutoff;
+		totalAmplitude += effAvgSpecharm[i];
 	}
+    
+    
+    float targetAmplitude = std::stof(iniCfg["targetAmplitude"]);
 	for (int i = 0; i < (int)(args.cutoff); i++)
 	{
 		for (unsigned int j = 0; j < cfg.halfHarmonics; j++)
@@ -227,6 +247,21 @@ int main(int argc, char* argv[]) {
 	//resample vowel part
     resampleSpecharm(effAvgSpecharm, effSpecharm, (int)args.cutoff, steadinessArr, loopOverlap, 0, 1, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
 
+    if (targetAmplitude > 0 && totalAmplitude > 0)
+    {
+        for (int i = 0; i < esperLength; i++)
+        {
+            for (int j = 0; j < cfg.halfHarmonics; j++)
+            {
+                resampledSpecharm[i * cfg.frameSize + j] *= targetAmplitude / totalAmplitude;
+            }
+            for (int j = cfg.nHarmonics + 2; j < cfg.frameSize; j++)
+            {
+                resampledSpecharm[i * cfg.frameSize + j] *= targetAmplitude / totalAmplitude;
+            }
+        }
+    }
+    
     //resample pitch
 	for (int i = sample.config.pitchLength; i < sample.config.batches; i++)
 	{
