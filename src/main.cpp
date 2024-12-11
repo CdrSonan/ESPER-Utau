@@ -267,9 +267,10 @@ int main(int argc, char* argv[]) {
     float* tgtPitch = (float*)malloc(esperLength * sizeof(float));
 	float* tgtPitchMod = (float*)malloc(esperLength * sizeof(float));
     float pitchDeviation = 0;
+	float timeMultiplier = 1.6 * args.tempo * cfg.batchSize / cfg.sampleRate;
     for (int i = 0; i < (int)(esperLength); i++)
     {
-        float pitchBendPos = (float)i / (float)esperLength * (float)args.pitchBend.size();
+        float pitchBendPos = (float)i * timeMultiplier;
         int pitchBendIndex = (int)pitchBendPos;
         float pitchBendWeight = pitchBendPos - pitchBendIndex;
         float pitchBend;
