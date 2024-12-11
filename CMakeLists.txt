@@ -16,7 +16,10 @@ if (WIN32)
     target_link_libraries(ESPER-Utau ${CMAKE_SOURCE_DIR}/ESPER/esper.lib)
 else()
     target_link_libraries(ESPER-Utau PRIVATE m)
-    target_link_libraries(ESPER-Utau PRIVATE ${CMAKE_SOURCE_DIR}/ESPER/libesper.so)
+    target_link_libraries(ESPER-Utau PRIVATE ${CMAKE_SOURCE_DIR}/build/libesper.so)
+    set_target_properties(ESPER-Utau PROPERTIES
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$ORIGIN/")
 endif(WIN32)
 
 include(CTest)
