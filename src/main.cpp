@@ -112,7 +112,12 @@ int main(int argc, char* argv[]) {
     loopOffset *= args.cutoff / 4.f;
 	args.cutoff -= 2. * loopOffset;
 	args.consonant += loopOffset;
-    int esperLength = args.length;// +(int)args.consonant;
+    if (args.cutoff < 1.)
+	{
+        args.consonant -= 1. - args.cutoff;
+		args.cutoff = 1.;
+	}
+    int esperLength = args.length;
     if (esperLength <= (int)args.consonant + 1)
 	{
 		esperLength = (int)args.consonant + 2;
@@ -152,8 +157,8 @@ int main(int argc, char* argv[]) {
     }
     else
 	{
-		timings.end1 = args.length - 2;
-		timings.end2 = args.length - 1;
+		timings.end1 = args.length;
+		timings.end2 = args.length;
 		timings.end3 = args.length;
 	}
     timings.windowStart = 0;
