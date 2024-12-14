@@ -113,6 +113,7 @@ typedef struct
     float* waveform;
     int* pitchDeltas;
     int* pitchMarkers;
+    char* pitchMarkerValidity;
     float* specharm;
     float* avgSpecharm;
     cSampleCfg config;

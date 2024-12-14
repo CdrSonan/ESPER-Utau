@@ -96,6 +96,7 @@ cSample createCSample(float* wave, int numSamples, engineCfg cfg, std::map<std::
     sample.waveform = wave;
     sample.pitchDeltas = (int*)malloc(sampleCfg.batches * sizeof(int));
 	sample.pitchMarkers = (int*)malloc(sampleCfg.length * sizeof(int));
+	sample.pitchMarkerValidity = (char*)malloc(sampleCfg.length * sizeof(char));
     sample.specharm = (float*)malloc(sampleCfg.batches * cfg.frameSize * sizeof(float));
     sample.avgSpecharm = (float*)malloc((cfg.halfHarmonics + cfg.halfTripleBatchSize + 1) * sizeof(float));
     sample.config = sampleCfg;
