@@ -1,0 +1,3 @@
+[submodule "libESPER"]
+	path = libESPER
+	url = https://github.com/CdrSonan/libESPER.git
