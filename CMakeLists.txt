@@ -6,17 +6,18 @@ add_executable(ESPER-Utau
     src/argparse.cpp
     src/fileio.cpp
     src/create-esper-structs.cpp
-    src/esper-utils.cpp
-    ESPER/esper.h
-    AudioFile/AudioFile.h)
+    src/esper-utils.cpp)
 
-include_directories(${CMAKE_SOURCE_DIR}/ESPER)
-include_directories(${CMAKE_SOURCE_DIR}/AudioFile)
+add_subdirectory(libESPER)
+
+include_directories(${PROJECT_SOURCE_DIR}/libESPER)
+include_directories(${PROJECT_SOURCE_DIR}/AudioFile)
 if (WIN32)
-    target_link_libraries(ESPER-Utau ${CMAKE_SOURCE_DIR}/ESPER/esper.lib)
+    target_link_libraries(ESPER-Utau esper)
+    set_target_properties(ESPER-Utau PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/libESPER/Debug;${CMAKE_BINARY_DIR}/libESPER/Release;${PROJECT_SOURCE_DIR}/libESPER/fftw_win;${PROJECT_SOURCE_DIR}/libESPER/nfft_win;%PATH%")
 else()
     target_link_libraries(ESPER-Utau PRIVATE m)
-    target_link_libraries(ESPER-Utau PRIVATE ${CMAKE_SOURCE_DIR}/build/libesper.so)
+    target_link_libraries(ESPER-Utau PRIVATE ${PROJECT_SOURCE_DIR}/build/libesper.so)
     set_target_properties(ESPER-Utau PROPERTIES
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "$ORIGIN/")
