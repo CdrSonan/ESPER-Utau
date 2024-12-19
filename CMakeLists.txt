@@ -38,15 +38,6 @@ if (WIN32)
     add_custom_command(TARGET ESPER-Utau POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:ESPER-Utau> "${CMAKE_BINARY_DIR}/bundled/ESPER-Utau.exe"
     )
-    #add_custom_command(TARGET ESPER-Utau POST_BUILD
-    #    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/libESPER/bundled/esper.dll" "${CMAKE_BINARY_DIR}/bundled/esper.dll"
-    #)
-    add_custom_command(TARGET ESPER-Utau POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/libESPER/fftw_win/libfftw3f-3.dll" "${CMAKE_BINARY_DIR}/bundled/libfftw3f-3.dll"
-    )
-    add_custom_command(TARGET ESPER-Utau POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/libESPER/nfft_win/libnfft3_threads-4.dll" "${CMAKE_BINARY_DIR}/bundled/libnfft3_threads-4.dll"
-    )
 else()
     target_link_libraries(ESPER-Utau PRIVATE m)
     #target_link_libraries(ESPER-Utau PRIVATE ${PROJECT_SOURCE_DIR}/build/libesper.so)
