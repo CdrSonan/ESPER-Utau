@@ -32,13 +32,15 @@ add_subdirectory(libESPER)
 
 include_directories(${PROJECT_SOURCE_DIR}/libESPER)
 include_directories(${PROJECT_SOURCE_DIR}/AudioFile)
-target_link_libraries(ESPER-Utau PRIVATE esper)
 if (WIN32)
+    target_link_libraries(ESPER-Utau PRIVATE esper)
     set_target_properties(ESPER-Utau PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/libESPER/Debug;${CMAKE_BINARY_DIR}/libESPER/Release;${PROJECT_SOURCE_DIR}/libESPER/fftw_win;${PROJECT_SOURCE_DIR}/libESPER/nfft_win;%PATH%")
     add_custom_command(TARGET ESPER-Utau POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:ESPER-Utau> "${CMAKE_BINARY_DIR}/bundled/ESPER-Utau.exe"
     )
 else()
+    add_dependencies(ESPER-Utau esper)
+    target_link_libraries(ESPER-Utau PRIVATE "${CMAKE_BINARY_DIR}/bundled/libesper.so")
     target_link_libraries(ESPER-Utau PRIVATE m)
     set_target_properties(ESPER-Utau PROPERTIES
         BUILD_WITH_INSTALL_RPATH TRUE
