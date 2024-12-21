@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(ESPER-Utau VERSION 0.1.0 LANGUAGES C CXX)
+project(ESPER-Utau VERSION 1.0.0 LANGUAGES C CXX)
 
 include(CTest)
 enable_testing()
@@ -40,10 +40,12 @@ if (WIN32)
     )
 else()
     target_link_libraries(ESPER-Utau PRIVATE m)
-    #target_link_libraries(ESPER-Utau PRIVATE ${PROJECT_SOURCE_DIR}/build/libesper.so)
     set_target_properties(ESPER-Utau PROPERTIES
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "$ORIGIN/")
+    add_custom_command(TARGET ESPER-Utau POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:ESPER-Utau> "${CMAKE_BINARY_DIR}/bundled/ESPER-Utau"
+    )
 endif(WIN32)
 
 # Set the C++ standard
