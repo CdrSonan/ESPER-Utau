@@ -32,7 +32,7 @@ add_subdirectory(libESPER)
 
 include_directories(${PROJECT_SOURCE_DIR}/libESPER)
 include_directories(${PROJECT_SOURCE_DIR}/AudioFile)
-target_link_libraries(ESPER-Utau esper)
+target_link_libraries(ESPER-Utau PRIVATE esper)
 if (WIN32)
     set_target_properties(ESPER-Utau PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/libESPER/Debug;${CMAKE_BINARY_DIR}/libESPER/Release;${PROJECT_SOURCE_DIR}/libESPER/fftw_win;${PROJECT_SOURCE_DIR}/libESPER/nfft_win;%PATH%")
     add_custom_command(TARGET ESPER-Utau POST_BUILD
