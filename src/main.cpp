@@ -222,11 +222,17 @@ int main(int argc, char* argv[]) {
     {
         effAvgSpecharm[i] /= loopLength;
     }
-	float totalAmplitude = 0.;
+	float totalVoiced = 0.;
+	float totalUnvoiced = 0.;
 	for (int i = 0; i < cfg.halfHarmonics; i++)
 	{
-		totalAmplitude += effAvgSpecharm[i];
+		totalVoiced += effAvgSpecharm[i];
 	}
+	for (int i = cfg.halfHarmonics; i < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; i++)
+	{
+		totalUnvoiced += effAvgSpecharm[i];
+	}
+	float totalAmplitude = totalVoiced + (totalUnvoiced * cfg.halfHarmonics / cfg.halfTripleBatchSize);
     
     
     float targetAmplitude = std::stof(iniCfg["targetAmplitude"]);
