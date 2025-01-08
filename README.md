@@ -74,10 +74,11 @@ First, use Git to clone this repository into a folder of your choice. Then creat
 Next run CMake. This can either be done from the console, or by using CMake GUI and pointing it at the repository root and build folders.
 After CMake has run, the build folder is going to contain a .sln file that you can open with Visual Studio. This is going to be your main entry point for editing and compiling the project.
 To compile, open the .sln file with Visual Studio, right-click the main solution in the project explorer on the right, and select "build solution".
-All binary file required to run the resampler are going to be placed in build/bundled. To get a working copy, also add the esper-config.ini file found in the repository root folder to these files.
+All binary files required to run the resampler are going to be placed in build/bundled. To get a working copy, also add the esper-config.ini file found in the repository root folder to these files.
+If the build fails or the executable is not present in uild/bundled, build a second time. This is an issue caused by git submodule updates modifying the .sln file.
 
 ## Linux
-All packages required for building on Linux can be installed via the buildessentials meta-package.
+To build ESPER-Utau on Linux, you are going to need patchelf, and the buildessentials meta-package, which includes all other required packages.
 After installing it, navigate to a folder of your choice, and clone the repository. Next, create a folder named "build" inside of the repository.
 Open a console window and navigate into this new build folder. Run
 cmake ..
