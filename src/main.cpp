@@ -11,6 +11,12 @@
 #include "esper-utils.hpp"
 #include "esper.h"
 
+#ifdef WIN32
+#define OS_SEP '\\'
+#else
+#define OS_SEP '/'
+#endif
+
 int main(int argc, char* argv[]) {
     //declare ESP file standard of the current engine version
 	unsigned int espFileStd = 5;
@@ -19,8 +25,8 @@ int main(int argc, char* argv[]) {
 
 	//read configuration files in order of priority
     std::map<std::string, std::string> iniCfg;
-    readIniFile(args.rsmpDir + "\\esper-config.ini", &iniCfg);
-    readIniFile(args.inputPath.substr(0, args.rsmpDir.find_last_of("/\\")) + "\\resampler-config.ini", &iniCfg);
+    readIniFile(args.rsmpDir + OS_SEP + "esper-config.ini", &iniCfg);
+    //readIniFile(args.inputPath.substr(0, args.rsmpDir.find_last_of("/\\")) + OS_SEP + "resampler-config.ini", &iniCfg);
     engineCfg cfg = createEngineCfg(iniCfg);
 
     //create sample object
