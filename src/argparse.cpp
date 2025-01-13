@@ -17,7 +17,6 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
         "pstb",
         "std",
         "bre",
-        "g",
         "int",
         "subh",
         "p",
@@ -26,6 +25,7 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
         "rgh",
         "grwl",
         "t",
+        "g",
     };
     std::map<std::string, int> flags;
     bool warning = false;
