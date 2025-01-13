@@ -228,31 +228,6 @@ int main(int argc, char* argv[]) {
     {
         effAvgSpecharm[i] /= loopLength;
     }
-	float totalVoiced = 0.;
-	float totalUnvoiced = 0.;
-	for (int i = 0; i < cfg.halfHarmonics; i++)
-	{
-		totalVoiced += effAvgSpecharm[i];
-	}
-	for (int i = cfg.halfHarmonics; i < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; i++)
-	{
-		totalUnvoiced += effAvgSpecharm[i];
-	}
-	float totalAmplitude = totalVoiced + (totalUnvoiced * cfg.halfHarmonics / cfg.halfTripleBatchSize);
-    
-    
-    float targetAmplitude = std::stof(iniCfg["targetAmplitude"]);
-	for (int i = 0; i < (int)(args.cutoff); i++)
-	{
-		for (unsigned int j = 0; j < cfg.halfHarmonics; j++)
-		{
-			effSpecharm[i * cfg.frameSize + j] -= effAvgSpecharm[j];
-		}
-		for (unsigned int j = 0; j < cfg.halfTripleBatchSize + 1; j++)
-		{
-			effSpecharm[i * cfg.frameSize + 2 * cfg.halfHarmonics + j] -= effAvgSpecharm[cfg.halfHarmonics + j];
-		}
-	}
 
     //loop overlap flag
 	float loopOverlap = 0.5;
@@ -263,21 +238,6 @@ int main(int argc, char* argv[]) {
 
 	//resample vowel part
     resampleSpecharm(effAvgSpecharm, effSpecharm, (int)args.cutoff, steadinessArr, loopOverlap, 0, 1, resampledSpecharm + (int)(args.consonant) * cfg.frameSize, timings, cfg);
-
-    if (targetAmplitude > 0 && totalAmplitude > 0)
-    {
-        for (int i = 0; i < esperLength; i++)
-        {
-            for (int j = 0; j < cfg.halfHarmonics; j++)
-            {
-                resampledSpecharm[i * cfg.frameSize + j] *= targetAmplitude / totalAmplitude;
-            }
-            for (int j = cfg.nHarmonics + 2; j < cfg.frameSize; j++)
-            {
-                resampledSpecharm[i * cfg.frameSize + j] *= targetAmplitude / totalAmplitude;
-            }
-        }
-    }
     
     //resample pitch
 	for (int i = sample.config.pitchLength; i < sample.config.batches; i++)
