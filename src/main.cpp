@@ -37,14 +37,14 @@ int main(int argc, char* argv[]) {
     if (iniCfg["useEsperFiles"] == "true")
     {
         std::string espFilePath = args.inputPath + ".esp";
-        espReadSuccess = readEspFile(espFilePath, sample, espFileStd, cfg);
+        espReadSuccess = readEspFile(espFilePath, sample, espFileStd, &cfg);
     }
 
 	if (espReadSuccess != 0) //no ESP file found or reading failed -> perform analysis to get the same data
     {
 		//read WAV file
         int numSamples;
-        float* wave = readWavFile(args.inputPath, &numSamples);
+        float* wave = readWavFile(args.inputPath, &numSamples, &cfg);
 
 		//load into sample object
         sample = createCSample(wave, numSamples, cfg, iniCfg);

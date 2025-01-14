@@ -14,10 +14,11 @@
 
 //Read a WAV file and return the samples as a float array
 //If the file contains multiple channels, only the first channel is read
-float* readWavFile(const std::string& path, int* numSamples) {
+float* readWavFile(const std::string& path, int* numSamples, engineCfg* config) {
     AudioFile<float> audioFile;
     audioFile.load(path);
     *numSamples = audioFile.getNumSamplesPerChannel();
+	config->sampleRate = audioFile.getSampleRate();
     float* samples = new float[*numSamples];
     for (int i = 0; i < *numSamples; i++) {
         samples[i] = audioFile.samples[0][i];
@@ -172,7 +173,7 @@ struct espFileHeader
 
 //Read an ESP file and store the data in the provided cSample object
 //the filestd parameter is used to verify the compatibility of the file with the current engine version
-int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg config)
+int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg* config)
 {
     //check if the file exists
     if (!std::filesystem::exists(path))
@@ -186,10 +187,10 @@ int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineC
     
     // check if the file is valid under the current engine configuration
 	if (header.filestd != filestd ||
-        header.sampleRate != config.sampleRate ||
-        header.tickRate != config.tickRate ||
-        header.batchSize != config.batchSize ||
-        header.nHarmonics != config.nHarmonics)
+        //header.sampleRate != config.sampleRate ||
+        header.tickRate != config->tickRate ||
+        header.batchSize != config->batchSize ||
+        header.nHarmonics != config->nHarmonics)
     {
         std::cerr << "Invalid ESP file for current config: " << path << std::endl;
         fclose(file);
@@ -203,12 +204,14 @@ int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineC
     sample.config.isPlosive = header.isPlosive;
     sample.pitchDeltas = (int*)malloc(sample.config.pitchLength * sizeof(int));
 	sample.pitchMarkers = (int*)malloc(sample.config.markerLength * sizeof(int));
-    sample.specharm = (float*)malloc(sample.config.batches * config.frameSize * sizeof(float));
-    sample.avgSpecharm = (float*)malloc((config.halfHarmonics + config.halfTripleBatchSize + 1) * sizeof(float));
+    sample.specharm = (float*)malloc(sample.config.batches * config->frameSize * sizeof(float));
+    sample.avgSpecharm = (float*)malloc((config->halfHarmonics + config->halfTripleBatchSize + 1) * sizeof(float));
     fread(sample.pitchDeltas, sizeof(int), sample.config.pitchLength, file);
 	fread(sample.pitchMarkers, sizeof(int), sample.config.markerLength, file);
-    fread(sample.specharm, sizeof(float), sample.config.batches * config.frameSize, file);
-    fread(sample.avgSpecharm, sizeof(float), config.halfHarmonics + config.halfTripleBatchSize + 1, file);
+    fread(sample.specharm, sizeof(float), sample.config.batches * config->frameSize, file);
+    fread(sample.avgSpecharm, sizeof(float), config->halfHarmonics + config->halfTripleBatchSize + 1, file);
+
+	config->sampleRate = header.sampleRate;
     fclose(file);
     return 0;
 }

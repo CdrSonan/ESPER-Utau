@@ -31,9 +31,9 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
     bool warning = false;
 	while (flagString.length() > 0) //iteratively remove the first flag from the string until it is empty
     {
-        for (int i = 0; i <= sizeof(supportedFlags); i++) //iterate through all supported flags
+        for (int i = 0; i <= 14; i++) //iterate through all supported flags
         {
-            if (i == 13) //the beginning of the flag string does not match any supported flag. Discard the first symbol and try again.
+            if (i == 14) //the beginning of the flag string does not match any supported flag. Discard the first symbol and try again.
             {
                 flagString = flagString.substr(1, flagString.length() - 1);
                 if (!warning)

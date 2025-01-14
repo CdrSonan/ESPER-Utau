@@ -5,7 +5,7 @@
 
 #pragma once
 
-float* readWavFile(const std::string& path, int* numSamples);
+float* readWavFile(const std::string& path, int* numSamples, engineCfg* config);
 
 void writeWavFile(const std::string& path, float* samples, int sampleRate, int numSamples);
 
@@ -15,6 +15,6 @@ int readFrqFile(const std::string& filename, double* avg_frq, std::vector<double
 
 void writeFrqFile(const std::string& filename, const std::string& header_text, int samples_per_frq, double avg_frq, const std::vector<double>& frequencies, const std::vector<double>& amplitudes);
 
-int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg config);
+int readEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg* config);
 
 void writeEspFile(std::string path, cSample& sample, unsigned int filestd, engineCfg config);
