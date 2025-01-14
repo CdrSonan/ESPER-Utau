@@ -219,14 +219,21 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-    int loopLength = (int)(args.cutoff);
-    if (loopLength > args.length)
-    {
-        loopLength = args.length;
-    }
     for (int i = 0; i < cfg.halfHarmonics + cfg.halfTripleBatchSize + 1; i++)
     {
-        effAvgSpecharm[i] /= loopLength;
+        effAvgSpecharm[i] /= (int)(args.cutoff);
+    }
+
+    for (int i = 0; i < (int)(args.cutoff); i++)
+    {
+        for (unsigned int j = 0; j < cfg.halfHarmonics; j++)
+        {
+            effSpecharm[i * cfg.frameSize + j] -= effAvgSpecharm[j];
+        }
+        for (unsigned int j = 0; j < cfg.halfTripleBatchSize + 1; j++)
+        {
+            effSpecharm[i * cfg.frameSize + 2 * cfg.halfHarmonics + j] -= effAvgSpecharm[cfg.halfHarmonics + j];
+        }
     }
 
     //loop overlap flag
