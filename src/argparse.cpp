@@ -19,7 +19,7 @@ std::map<std::string, int> parseFlagString(std::string flagString) {
         "bre",
         "int",
         "subh",
-        "p",
+        "P",
         "dyn",
         "bri",
         "rgh",
