@@ -252,11 +252,11 @@ int main(int argc, char* argv[]) {
 		sample.pitchDeltas[i] = sample.pitchDeltas[sample.config.pitchLength - 1];
 	}
 	float meanPitch = 0;
-	for (int i = (int)((args.offset) + args.consonant); i < (int)((args.offset) + args.consonant) + (int)args.cutoff; i++)
+	for (int i = (int)args.offset; i < (int)args.offset + (int)args.consonant + (int)args.cutoff; i++)
 	{
 		meanPitch += sample.pitchDeltas[i];
 	}
-	meanPitch /= (int)args.cutoff;
+	meanPitch /= (int)args.consonant + (int)args.cutoff;
     float* resampledPitch = (float*)malloc(esperLength * sizeof(float));
     for (int i = 0; i < (int)(args.consonant); i++)
     {
