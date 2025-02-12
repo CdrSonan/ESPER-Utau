@@ -89,8 +89,4 @@ Like on Windows, the resultant binary files are placed in build/bundled, and you
 Compiling on Linux takes significantly longer than on Windows, since it includes a download and full build of the 3rd-party libraries libfftw and libnfft.
 
 # Known bugs
-- nfft built through the Linux build process has a misconfigured rpath attribute, preventing the resampler from starting if it isn't corrected first
 - build steps on Windows may happen out of order, because of which several subsequent build attempts may be required to build all files
-- certain oto.ini configurations may cause a crash
-- certain samples may experience an unexpected formant shift
-- end breaths and certain other samples may be normalised to an incorrect, too high volume
