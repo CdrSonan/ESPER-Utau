@@ -2,4 +2,5 @@
 using ESPER_Utau;
 
 var arguments = Environment.GetCommandLineArgs();
-var argParser = ArgParser(arguments);
+var argParser = new ArgParser(arguments);
+var configParser = new ConfigParser(argParser.InputPath, argParser.RsmpDir);
