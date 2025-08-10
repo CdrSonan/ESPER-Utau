@@ -1,3 +1,5 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿
+using ESPER_Utau;
 
-Console.WriteLine("Hello, World!");
+var arguments = Environment.GetCommandLineArgs();
+var argParser = ArgParser(arguments);

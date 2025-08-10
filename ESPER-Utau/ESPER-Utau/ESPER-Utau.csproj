@@ -8,4 +8,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="libESPER-V2" Version="0.2.0" />
+      <PackageReference Include="NAudio" Version="2.2.1" />
+    </ItemGroup>
+
 </Project>
