@@ -1,0 +1,94 @@
+using libESPER_V2.Core;
+using libESPER_V2.Transforms;
+using MathNet.Numerics.Interpolation;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Statistics;
+using NAudio.Wave;
+
+namespace ESPER_Utau;
+
+public static class EsperWrapper
+{
+    public static EsperAudio LoadOrCreate(string filename, ConfigParser config)
+    {
+        var espFilename = Path.ChangeExtension(filename, ".esp");
+        var frqFilename = Path.ChangeExtension(filename, ".frq");
+        
+        // Attempt to load .esp file
+        if (config.UseEsp)
+        {
+            if (File.Exists(espFilename))
+            {
+                var espBytes = File.ReadAllBytes(espFilename);
+                return Serialization.Deserialize(espBytes);
+            }
+        }
+
+        float? expectedPitch = null;
+        // .esp file not found - run forward transform
+        if (config.UseFrq && File.Exists(frqFilename))
+        {
+            var frq = new FrqParser(frqFilename);
+            expectedPitch = frq.F0Mean;
+        }
+        
+        // read audio file
+        var waveform = Array.Empty<float>();
+        using var reader = new WaveFileReader(filename);
+        var sampleRate = reader.WaveFormat.SampleRate;
+        while (reader.Position < reader.Length)
+        {
+            var frame = reader.ReadNextSampleFrame();
+            if (frame == null) break;
+            var sample = frame[0]; // Assuming mono audio
+            Array.Resize(ref waveform, waveform.Length + 1);
+            waveform[^1] = sample;
+        }
+
+        var sampleConfig = new EsperAudioConfig((ushort)config.NVoiced, (ushort)config.NUnvoiced, (int)config.StepSize);
+        var forwardConfig = new EsperForwardConfig(null, sampleRate, expectedPitch);
+        
+        var esperAudio = EsperTransforms.Forward(
+            Vector<float>.Build.DenseOfArray(waveform),
+            sampleConfig,
+            forwardConfig);
+        
+        if (config.OverwriteFrq || (config.CreateFrq && !File.Exists(frqFilename)))
+        {
+            // Write FRQ file
+            var f0 = esperAudio.GetPitch().Map(i => sampleRate / i);
+            var amplitudes = esperAudio.GetVoicedAmps().Row(1);
+            var f0Mean = f0.Mean();
+            if (config.StepSize == 256)
+            {
+                FrqWriter.Write(frqFilename, f0.ToDouble().ToArray(), amplitudes.ToDouble().ToArray(), f0Mean);
+            }
+            else
+            {
+                var scale = Vector<double>.Build.Dense(f0.Count, i => i);
+                var newScale = Vector<double>.Build.Dense(f0.Count, i => i * (256.0 / config.StepSize));
+                
+                var f0Interpolator = new StepInterpolation(scale.ToArray(), f0.ToDouble().ToArray());
+                var ampsInterpolator = new StepInterpolation(scale.ToArray(), amplitudes.ToDouble().ToArray());
+                var resampledF0 = new double[f0.Count];
+                var resampledAmps = new double[amplitudes.Count];
+                for (int i = 0; i < f0.Count; i++)
+                {
+                    resampledF0[i] = f0Interpolator.Interpolate(newScale[i]);
+                    resampledAmps[i] = ampsInterpolator.Interpolate(newScale[i]);
+                }
+                
+                FrqWriter.Write(frqFilename, resampledF0, resampledAmps, f0Mean);
+            }
+        }
+        
+        if (config.OverwriteEsp || (config.CreateEsp && !File.Exists(espFilename)))
+        {
+            // Write ESP file
+            var espBytes = Serialization.Serialize(esperAudio);
+            File.WriteAllBytes(espFilename, espBytes);
+        }
+        
+        return esperAudio;
+    }
+}
