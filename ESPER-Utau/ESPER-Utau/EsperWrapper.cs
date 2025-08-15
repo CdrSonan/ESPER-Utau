@@ -9,10 +9,13 @@ namespace ESPER_Utau;
 
 public static class EsperWrapper
 {
-    public static EsperAudio LoadOrCreate(string filename, ConfigParser config)
+    public static (EsperAudio, int) LoadOrCreate(string filename, ConfigParser config)
     {
         var espFilename = Path.ChangeExtension(filename, ".esp");
         var frqFilename = Path.ChangeExtension(filename, ".frq");
+        
+        using var reader = new WaveFileReader(filename);
+        var sampleRate = reader.WaveFormat.SampleRate;
         
         // Attempt to load .esp file
         if (config.UseEsp)
@@ -20,7 +23,16 @@ public static class EsperWrapper
             if (File.Exists(espFilename))
             {
                 var espBytes = File.ReadAllBytes(espFilename);
-                return Serialization.Deserialize(espBytes);
+                try
+                {
+                    var fetchedEsperAudio =  Serialization.Deserialize(espBytes);
+                    return (fetchedEsperAudio, sampleRate);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+                
             }
         }
 
@@ -34,8 +46,7 @@ public static class EsperWrapper
         
         // read audio file
         var waveform = Array.Empty<float>();
-        using var reader = new WaveFileReader(filename);
-        var sampleRate = reader.WaveFormat.SampleRate;
+        
         while (reader.Position < reader.Length)
         {
             var frame = reader.ReadNextSampleFrame();
@@ -65,14 +76,15 @@ public static class EsperWrapper
             }
             else
             {
+                var newCount = (int)Math.Ceiling(f0.Count * (256.0 / config.StepSize));
                 var scale = Vector<double>.Build.Dense(f0.Count, i => i);
-                var newScale = Vector<double>.Build.Dense(f0.Count, i => i * (256.0 / config.StepSize));
+                var newScale = Vector<double>.Build.Dense(newCount, i => i * (256.0 / config.StepSize));
                 
                 var f0Interpolator = new StepInterpolation(scale.ToArray(), f0.ToDouble().ToArray());
                 var ampsInterpolator = new StepInterpolation(scale.ToArray(), amplitudes.ToDouble().ToArray());
-                var resampledF0 = new double[f0.Count];
-                var resampledAmps = new double[amplitudes.Count];
-                for (int i = 0; i < f0.Count; i++)
+                var resampledF0 = new double[newCount];
+                var resampledAmps = new double[newCount];
+                for (int i = 0; i < newCount; i++)
                 {
                     resampledF0[i] = f0Interpolator.Interpolate(newScale[i]);
                     resampledAmps[i] = ampsInterpolator.Interpolate(newScale[i]);
@@ -89,6 +101,6 @@ public static class EsperWrapper
             File.WriteAllBytes(espFilename, espBytes);
         }
         
-        return esperAudio;
+        return (esperAudio, sampleRate);
     }
 }
