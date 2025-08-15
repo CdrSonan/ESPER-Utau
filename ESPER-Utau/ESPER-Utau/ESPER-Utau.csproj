@@ -3,14 +3,24 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <PublishSingleFile>true</PublishSingleFile>
+        <PublishTrimmed>true</PublishTrimmed>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <SelfContained>true</SelfContained>
         <RootNamespace>ESPER_Utau</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="libESPER-V2" Version="0.2.0" />
       <PackageReference Include="NAudio" Version="2.2.1" />
     </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="dotnet publish -c Release -r win-x64 --self-contained true --no-restore" />
+    </Target>
 
 </Project>
