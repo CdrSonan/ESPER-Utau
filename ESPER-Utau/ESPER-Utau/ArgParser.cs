@@ -119,7 +119,7 @@ public class ArgParser
     }
 
     private static readonly HashSet<string> SupportedFlags =
-        ["ovl", "bre", "P", "dyn", "bri", "rgh", "gro", "m", "t", "g"];
+        ["ovl", "bre", "pst", "P", "dyn", "bri", "std", "rgh", "gro", "m", "t", "g"];
 
     /// <summary>
     /// Converts a dense flag string into a dictionary of the supported flags and their respective values.

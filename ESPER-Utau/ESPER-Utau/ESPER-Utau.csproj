@@ -4,18 +4,22 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-arm64</RuntimeIdentifiers>
-        <PublishSingleFile>true</PublishSingleFile>
-        <PublishTrimmed>true</PublishTrimmed>
-        <PublishReadyToRun>true</PublishReadyToRun>
-        <SelfContained>true</SelfContained>
         <RootNamespace>ESPER_Utau</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+        <PublishSingleFile>true</PublishSingleFile>
+        <PublishTrimmed>true</PublishTrimmed>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <SelfContained>true</SelfContained>
+    </PropertyGroup>
+
+
     <ItemGroup>
-      <PackageReference Include="libESPER-V2" Version="0.2.0" />
+      <PackageReference Include="libESPER-V2" Version="0.3.0" />
       <PackageReference Include="NAudio" Version="2.2.1" />
     </ItemGroup>
 

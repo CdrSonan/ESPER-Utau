@@ -9,7 +9,7 @@ using NAudio.Wave;
 
 var arguments = Environment.GetCommandLineArgs();
 var argParser = new ArgParser(arguments);
-var configParser = new ConfigParser(argParser.InputPath, argParser.RsmpDir);
+var configParser = new ConfigParser(Path.GetDirectoryName(argParser.InputPath), argParser.RsmpDir);
 var (esperAudio, sampleRate) = EsperWrapper.LoadOrCreate(argParser.InputPath, configParser);
 
 var length = (int)(argParser.Length * sampleRate / configParser.StepSize / 1000);
@@ -47,8 +47,9 @@ var formantShift = MakeParamArray(argParser, "g", 0.0f, length);
 var growl = MakeParamArray(argParser, "gro", 0.0f, length);
 var mouth = MakeParamArray(argParser, "m", 0.0f, length);
 var roughness = MakeParamArray(argParser, "rgh", 0.0f, length);
+var steadiness = MakeParamArray(argParser, "std", 0.0f, length);
 
-var pitchArr = new double[length];
+var pitchArr = new double[argParser.PitchBend.Length];
 var scale = Vector<double>.Build.Dense(argParser.PitchBend.Length, i => i);
 var newScale = Vector<double>.Build.Dense(length, i => i * ((double)length / argParser.PitchBend.Length));
 double basePitch;
@@ -60,25 +61,22 @@ else
 {
     basePitch = MidiPitchToEsperPitch(argParser.Pitch, sampleRate) + Double.Pow(2, (double)tFlag / 100);
 }
-for (var i = 0; i < length; i++)
+for (var i = 0; i < argParser.PitchBend.Length; i++)
 {
     pitchArr[i] = argParser.PitchBend[i] + basePitch;
 }
 var pitchBendInterpolator = new StepInterpolation(scale.ToArray(), pitchArr);
 var resampledPitch = Vector<float>.Build.Dense(length, i => (float)pitchBendInterpolator.Interpolate(newScale[i]));
 
-var oldPitch = esperAudio.GetPitch();
-oldPitch -= oldPitch.Median();
-resampledPitch += oldPitch;
-
 var consonantAudio = CutCombine.Cut(esperAudio, offset, offset + consonant);
 var vowelAudio = CutCombine.Cut(esperAudio, offset + consonant, offset + consonant + vowel);
-var resampledVowelAudio = vowelAudio; // TODO: Apply resampling logic once implemented in libESPER_V2
+var resampledVowelAudio = vowelAudio; // TODO: Apply resampling logic once implemented in libESPER_V2, handle old pitch resampling
 var outputAudio = CutCombine.Concat(consonantAudio, resampledVowelAudio);
 
 // Apply effects
 Effects.FusedPitchFormantShift(outputAudio, resampledPitch, formantShift);
 Effects.Brightness(outputAudio, brightness);
+Effects.Steadiness(outputAudio, steadiness);
 Effects.Breathiness(outputAudio, breathiness);
 Effects.Dynamics(outputAudio, dynamic);
 Effects.Mouth(outputAudio, mouth);
