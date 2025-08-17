@@ -4,6 +4,7 @@ using libESPER_V2.Effects;
 using libESPER_V2.Transforms;
 using MathNet.Numerics.Interpolation;
 using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Statistics;
 using NAudio.Wave;
 
 var arguments = Environment.GetCommandLineArgs();
@@ -65,6 +66,10 @@ for (var i = 0; i < length; i++)
 }
 var pitchBendInterpolator = new StepInterpolation(scale.ToArray(), pitchArr);
 var resampledPitch = Vector<float>.Build.Dense(length, i => (float)pitchBendInterpolator.Interpolate(newScale[i]));
+
+var oldPitch = esperAudio.GetPitch();
+oldPitch -= oldPitch.Median();
+resampledPitch += oldPitch;
 
 var consonantAudio = CutCombine.Cut(esperAudio, offset, offset + consonant);
 var vowelAudio = CutCombine.Cut(esperAudio, offset + consonant, offset + consonant + vowel);
