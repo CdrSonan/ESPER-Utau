@@ -48,6 +48,7 @@ var growl = MakeParamArray(argParser, "gro", 0.0f, length);
 var mouth = MakeParamArray(argParser, "m", 0.0f, length);
 var roughness = MakeParamArray(argParser, "rgh", 0.0f, length);
 var steadiness = MakeParamArray(argParser, "std", 0.0f, length);
+var overlap = argParser.Flags.TryGetValue("ovl", out var overlapFlag) ? (float)(overlapFlag / 100.0) : 0.5f;
 
 var pitchArr = new double[argParser.PitchBend.Length];
 var scale = Vector<double>.Build.Dense(argParser.PitchBend.Length, i => i);
@@ -70,8 +71,12 @@ var resampledPitch = Vector<float>.Build.Dense(length, i => (float)pitchBendInte
 
 var consonantAudio = CutCombine.Cut(esperAudio, offset, offset + consonant);
 var vowelAudio = CutCombine.Cut(esperAudio, offset + consonant, offset + consonant + vowel);
-var resampledVowelAudio = vowelAudio; // TODO: Apply resampling logic once implemented in libESPER_V2, handle old pitch resampling
+var resampledVowelAudio = Stretch.StretchLoopHybrid(vowelAudio, length - consonant, overlap);
 var outputAudio = CutCombine.Concat(consonantAudio, resampledVowelAudio);
+
+var oldPitch = outputAudio.GetPitch();
+oldPitch -= (float)oldPitch.Mean();
+resampledPitch += oldPitch;
 
 // Apply effects
 Effects.FusedPitchFormantShift(outputAudio, resampledPitch, formantShift);
