@@ -1,34 +1,25 @@
 expressions:
-  lovl:
+  ovl:
     name: loop overlap
-    abbr: Elov
-    type: Numerical
-    min: 0
-    max: 100
-    default_value: 48
-    is_flag: true
-    flag: lovl
-  loff:
-    name: loop offset
-    abbr: Elof
+    abbr: ovl
     type: Numerical
     min: 0
     max: 100
     default_value: 0
     is_flag: true
-    flag: loff
-  pstb:
+    flag: ovl
+  stb:
     name: pitch stability
-    abbr: Epst
+    abbr: stb
     type: Numerical
     min: -100
     max: 100
     default_value: 0
     is_flag: true
-    flag: pstb
+    flag: stb
   std:
     name: steadiness
-    abbr: Estd
+    abbr: std
     type: Numerical
     min: -100
     max: 100
@@ -37,7 +28,7 @@ expressions:
     flag: std
   bre:
     name: breathiness
-    abbr: Ebre
+    abbr: bre
     type: Numerical
     min: -100
     max: 100
@@ -46,43 +37,16 @@ expressions:
     flag: bre
   gen:
     name: gender
-    abbr: Egen
+    abbr: gen
     type: Numerical
     min: -100
     max: 100
     default_value: 0
     is_flag: true
     flag: g
-  int:
-    name: intonation
-    abbr: Eint
-    type: Numerical
-    min: 0
-    max: 100
-    default_value: 0
-    is_flag: true
-    flag: int
-  subh:
-    name: subharmonics
-    abbr: Esub
-    type: Numerical
-    min: -100
-    max: 100
-    default_value: 0
-    is_flag: true
-    flag: subh
-  pcmp:
-    name: peak compressor
-    abbr: Ecmp
-    type: Numerical
-    min: 0
-    max: 100
-    default_value: 0
-    is_flag: true
-    flag: p
   dyn:
     name: dynamics
-    abbr: Edyn
+    abbr: dyn
     type: Numerical
     min: -100
     max: 100
@@ -91,7 +55,7 @@ expressions:
     flag: dyn
   bri:
     name: brightness
-    abbr: Ebri
+    abbr: bri
     type: Numerical
     min: -100
     max: 100
@@ -100,19 +64,29 @@ expressions:
     flag: bri
   rgh:
     name: roughness
-    abbr: Ergh
+    abbr: rgh
     type: Numerical
     min: 0
     max: 100
     default_value: 0
     is_flag: true
     flag: rgh
-  grwl:
+  gro:
     name: growl
-    abbr: Egrw
+    abbr: gro
     type: Numerical
     min: 0
     max: 100
     default_value: 0
     is_flag: true
-    flag: grwl
+    flag: gro
+  mou:
+    name: mouth
+    abbr: mou
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: m
+

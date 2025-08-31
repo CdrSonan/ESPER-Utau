@@ -27,13 +27,11 @@ else
     vowel = esperAudio.Length - offset - cutoff;
 }
 vowel -= consonant;
-consonant += offset;
-if (cutoff < 1)
-{
-    consonant -= 1 - cutoff;
-    vowel = 1;
-}
 
+if (vowel <= 1)
+{
+    vowel = 2;
+}
 if (length <= consonant + 1)
 {
     length = consonant + 2;
@@ -48,7 +46,7 @@ var growl = MakeParamArray(argParser, "gro", 0.0f, length);
 var mouth = MakeParamArray(argParser, "m", 0.0f, length);
 var roughness = MakeParamArray(argParser, "rgh", 0.0f, length);
 var steadiness = MakeParamArray(argParser, "std", 0.0f, length);
-var overlap = argParser.Flags.TryGetValue("ovl", out var overlapFlag) ? (float)(overlapFlag / 100.0) : 0.5f;
+var overlap = argParser.Flags.TryGetValue("ovl", out var overlapFlag) ? (float)(overlapFlag / 100.0) : 0.0f;
 
 var pitchArr = new double[argParser.PitchBend.Length];
 var scale = Vector<double>.Build.Dense(argParser.PitchBend.Length, i => i);
@@ -56,26 +54,32 @@ var newScale = Vector<double>.Build.Dense(length, i => i * ((double)length / arg
 double basePitch;
 if (argParser.Flags.TryGetValue("t", out var tFlag))
 {
-    basePitch = MidiPitchToEsperPitch(argParser.Pitch, sampleRate);
+    basePitch = MidiPitchToEsperPitch(argParser.Pitch, sampleRate) + double.Pow(2, (double)tFlag / 100);
 }
 else
 {
-    basePitch = MidiPitchToEsperPitch(argParser.Pitch, sampleRate) + Double.Pow(2, (double)tFlag / 100);
+    basePitch = MidiPitchToEsperPitch(argParser.Pitch, sampleRate);
 }
 for (var i = 0; i < argParser.PitchBend.Length; i++)
 {
-    pitchArr[i] = argParser.PitchBend[i] + basePitch;
+    pitchArr[i] = basePitch * double.Pow(2, (double)argParser.PitchBend[i] / 2048);
 }
 var pitchBendInterpolator = new StepInterpolation(scale.ToArray(), pitchArr);
 var resampledPitch = Vector<float>.Build.Dense(length, i => (float)pitchBendInterpolator.Interpolate(newScale[i]));
 
 var consonantAudio = CutCombine.Cut(esperAudio, offset, offset + consonant);
 var vowelAudio = CutCombine.Cut(esperAudio, offset + consonant, offset + consonant + vowel);
-var resampledVowelAudio = Stretch.StretchLoopHybrid(vowelAudio, length - consonant, overlap);
+var resampledVowelAudio = overlap == 0.0f ?
+    Stretch.StretchAudio(vowelAudio, length - consonant) :
+    Stretch.StretchLoopHybrid(vowelAudio, length - consonant, overlap);
 var outputAudio = CutCombine.Concat(consonantAudio, resampledVowelAudio);
 
 var oldPitch = outputAudio.GetPitch();
 oldPitch -= (float)oldPitch.Mean();
+if (argParser.Flags.TryGetValue("stb", out var stability))
+{
+    oldPitch *= stability / 100.0f + 1.0f;
+}
 resampledPitch += oldPitch;
 
 // Apply effects
