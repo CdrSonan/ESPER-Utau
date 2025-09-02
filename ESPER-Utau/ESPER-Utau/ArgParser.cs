@@ -49,15 +49,15 @@ public class ArgParser
         InputPath = Path.Exists(args[1]) ? args[1] : throw new InvalidOperationException();
         OutputPath = Path.GetFullPath(args[2]);
         Pitch = NoteToMidiPitch(args[3]);
-        Velocity = double.Parse(args[4]);
+        Velocity = double.Parse(args[4], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
         Flags = ParseFlagString(args[5]);
-        Offset = double.Parse(args[6]);
+        Offset = double.Parse(args[6], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
         Length = long.Parse(args[7]);
-        Consonant = double.Parse(args[8]);
-        Cutoff = double.Parse(args[9]);
-        Volume = double.Parse(args[10]);
-        Modulation = double.Parse(args[11]);
-        Tempo = double.Parse(args[12][1..]);
+        Consonant = double.Parse(args[8], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+        Cutoff = double.Parse(args[9], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+        Volume = double.Parse(args[10], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+        Modulation = double.Parse(args[11], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+        Tempo = double.Parse(args[12][1..], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
         PitchBend = DecodePitchBend(args[13]);
     }
 
