@@ -59,20 +59,29 @@ public class FrqWriter
         using var fs = File.Create(filename);
         using var bw = new BinaryWriter(fs);
 
-        // Write header
-        bw.Write("FRQ".ToCharArray());
-        bw.Write(256); // samples per frq
-        bw.Write(f0Mean); // average frequency
-
-        // Padding
-        bw.Write(new byte[16]);
-
-        bw.Write(f0.Length); // number of chunks
-
-        foreach (var (freq, amp) in f0.Zip(amps, (f, a) => (f, a)))
+        try
         {
-            bw.Write(freq);
-            bw.Write(amp);
+            // Write header
+            bw.Write("FREQ0003".ToCharArray());
+            bw.Write(256); // samples per frq
+            bw.Write(f0Mean); // average frequency
+
+            // Padding
+            bw.Write(new byte[16]);
+
+            bw.Write(f0.Length); // number of chunks
+
+            foreach (var (freq, amp) in f0.Zip(amps, (f, a) => (f, a)))
+            {
+                bw.Write(freq);
+                bw.Write(amp);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error while writing FRQ file:");
+            Console.WriteLine(e);
+            Console.WriteLine("Continuing...");
         }
     }
 }

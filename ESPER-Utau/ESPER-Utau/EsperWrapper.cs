@@ -36,7 +36,7 @@ public static class EsperWrapper
             }
         }
 
-        float? expectedPitch = null;
+        float? expectedPitch = config.ExpPitch;
         // .esp file not found - run forward transform
         if (config.UseFrq && File.Exists(frqFilename))
         {
@@ -57,7 +57,7 @@ public static class EsperWrapper
         }
 
         var sampleConfig = new EsperAudioConfig((ushort)config.NVoiced, (ushort)config.NUnvoiced, (int)config.StepSize);
-        var forwardConfig = new EsperForwardConfig(null, sampleRate, expectedPitch);
+        var forwardConfig = new EsperForwardConfig(config.Smoothing, expectedPitch);
         
         var esperAudio = EsperTransforms.Forward(
             Vector<float>.Build.DenseOfArray(waveform),
@@ -89,7 +89,6 @@ public static class EsperWrapper
                     resampledF0[i] = f0Interpolator.Interpolate(newScale[i]);
                     resampledAmps[i] = ampsInterpolator.Interpolate(newScale[i]);
                 }
-                
                 FrqWriter.Write(frqFilename, resampledF0, resampledAmps, f0Mean);
             }
         }
@@ -98,7 +97,17 @@ public static class EsperWrapper
         {
             // Write ESP file
             var espBytes = Serialization.Serialize(esperAudio);
-            File.WriteAllBytes(espFilename, espBytes);
+            try
+            {
+                File.WriteAllBytes(espFilename, espBytes);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error while writing ESP file:");
+                Console.WriteLine(e);
+                Console.WriteLine("Continuing...");
+            }
+            
         }
         
         return (esperAudio, sampleRate);

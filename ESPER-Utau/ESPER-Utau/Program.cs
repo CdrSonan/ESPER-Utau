@@ -50,7 +50,7 @@ var overlap = argParser.Flags.TryGetValue("ovl", out var overlapFlag) ? (float)(
 
 var pitchArr = new double[argParser.PitchBend.Length];
 var scale = Vector<double>.Build.Dense(argParser.PitchBend.Length, i => i);
-var newScale = Vector<double>.Build.Dense(length, i => i * ((double)length / argParser.PitchBend.Length));
+var newScale = Vector<double>.Build.Dense(length, i => double.Min(i * 307.2 * argParser.Tempo / sampleRate, argParser.PitchBend.Length - 1));
 double basePitch;
 if (argParser.Flags.TryGetValue("t", out var tFlag))
 {
@@ -62,7 +62,7 @@ else
 }
 for (var i = 0; i < argParser.PitchBend.Length; i++)
 {
-    pitchArr[i] = basePitch * double.Pow(2, (double)argParser.PitchBend[i] / 2048);
+    pitchArr[i] = basePitch * double.Pow(2, (double)argParser.PitchBend[i] / 1200);
 }
 var pitchBendInterpolator = new StepInterpolation(scale.ToArray(), pitchArr);
 var resampledPitch = Vector<float>.Build.Dense(length, i => (float)pitchBendInterpolator.Interpolate(newScale[i]));

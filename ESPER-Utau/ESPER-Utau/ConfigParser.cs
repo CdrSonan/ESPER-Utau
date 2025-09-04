@@ -15,8 +15,8 @@ public class ConfigParser
     public readonly long NVoiced;
     public readonly long NUnvoiced;
     public readonly long StepSize;
-    public readonly double ExpPitch;
-    public readonly double Smoothing;
+    public readonly float? ExpPitch;
+    public readonly float? Smoothing;
     
     /// <summary>
     /// Initializes a new instance of the <see cref="ConfigParser"/> class, and fills its attributes with the read config values.
@@ -74,10 +74,10 @@ public class ConfigParser
                     StepSize = long.Parse(value);
                     break;
                 case "exppitch":
-                    ExpPitch = double.Parse(value);
+                    ExpPitch = value == "null" ? null : float.Parse(value);
                     break;
                 case "smoothing":
-                    Smoothing = double.Parse(value);
+                    Smoothing = value == "null" ? null : float.Parse(value);
                     break;
                 default:
                     Console.WriteLine($"WARNING: Unknown configuration key: {key}");
