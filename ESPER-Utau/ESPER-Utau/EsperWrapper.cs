@@ -12,7 +12,7 @@ public static class EsperWrapper
     public static (EsperAudio, int) LoadOrCreate(string filename, ConfigParser config)
     {
         var espFilename = Path.ChangeExtension(filename, ".esp");
-        var frqFilename = Path.GetFileNameWithoutExtension(filename) + "_wav.frq";
+        var frqFilename = filename[..^4] + "_wav.frq";
         
         using var reader = new WaveFileReader(filename);
         var sampleRate = reader.WaveFormat.SampleRate;

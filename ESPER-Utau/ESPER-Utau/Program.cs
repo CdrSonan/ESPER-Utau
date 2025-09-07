@@ -38,7 +38,7 @@ if (length <= consonant + 1)
 }
 
 // Create parameter arrays
-var breathiness = MakeParamArray(argParser, "bre", 0.0f, length);
+var breathiness = MakeParamArray(argParser, "B", 0.0f, length);
 var brightness = MakeParamArray(argParser, "bri", 0.0f, length);
 var dynamic = MakeParamArray(argParser, "dyn", 0.0f, length);
 var formantShift = MakeParamArray(argParser, "g", 0.0f, length);
