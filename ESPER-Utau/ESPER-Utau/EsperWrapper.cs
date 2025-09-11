@@ -45,15 +45,14 @@ public static class EsperWrapper
         }
         
         // read audio file
-        var waveform = Array.Empty<float>();
+        var waveform = new float[reader.SampleCount];
         
-        while (reader.Position < reader.Length)
+        for (var i = 0; i < waveform.Length; i++)
         {
             var frame = reader.ReadNextSampleFrame();
-            if (frame == null) break;
-            var sample = frame[0]; // Assuming mono audio
-            Array.Resize(ref waveform, waveform.Length + 1);
-            waveform[^1] = sample;
+            //if (frame == null) break;
+            var sample = frame[0];
+            waveform[i] = sample;
         }
 
         var sampleConfig = new EsperAudioConfig((ushort)config.NVoiced, (ushort)config.NUnvoiced, (int)config.StepSize);
