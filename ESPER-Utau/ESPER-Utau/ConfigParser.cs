@@ -74,10 +74,10 @@ public class ConfigParser
                     StepSize = long.Parse(value);
                     break;
                 case "exppitch":
-                    ExpPitch = value == "null" ? null : float.Parse(value);
+                    ExpPitch = value == "null" ? null : float.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "smoothing":
-                    Smoothing = value == "null" ? null : float.Parse(value);
+                    Smoothing = value == "null" ? null : float.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 default:
                     Console.WriteLine($"WARNING: Unknown configuration key: {key}");
