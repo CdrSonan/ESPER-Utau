@@ -26,24 +26,6 @@ expressions:
     default_value: 0
     is_flag: true
     flag: std
-  bre:
-    name: breathiness
-    abbr: bre
-    type: Numerical
-    min: -100
-    max: 100
-    default_value: 0
-    is_flag: true
-    flag: bre
-  gen:
-    name: gender
-    abbr: gen
-    type: Numerical
-    min: -100
-    max: 100
-    default_value: 0
-    is_flag: true
-    flag: g
   dyn:
     name: dynamics
     abbr: dyn
@@ -80,6 +62,15 @@ expressions:
     default_value: 0
     is_flag: true
     flag: gro
+  bre:
+    name: breathiness
+    abbr: bre
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: B
   mou:
     name: mouth
     abbr: mou
@@ -89,4 +80,12 @@ expressions:
     default_value: 0
     is_flag: true
     flag: m
-
+  gen:
+    name: gender
+    abbr: gen
+    type: Numerical
+    min: -100
+    max: 100
+    default_value: 0
+    is_flag: true
+    flag: g

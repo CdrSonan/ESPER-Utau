@@ -36,7 +36,7 @@ public static class EsperWrapper
             }
         }
 
-        float? expectedPitch = config.ExpPitch;
+        var expectedPitch = config.ExpPitch;
         // .esp file not found - run forward transform
         if (config.UseFrq && File.Exists(frqFilename))
         {
