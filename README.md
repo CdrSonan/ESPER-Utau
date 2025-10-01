@@ -16,6 +16,7 @@ Then, as with other resamplers, select ESPER-Utau windows.exe as the resampler e
 To use the resampler with OpenUTAU, navigate to OpenUTAU's data directory and open the folder named "Resamplers".
 Inside the resamplers folder, create a new folder named ESPER-Utau (or any other name of your choosing), and place the executable matching your platform, esper-config.ini, and ESPER-Utau.yaml into it.
 The resampler will then be able for selection in the settings dialogue of all tracks.
+In order for OpenUTAU to automatically recognise the supported expressions, rename the executable to ESPER-Utau.exe if you are on Windows, or just ESPER-Utau on all other platforms.
 
 # Flags/Expressions
 ESPER-Utau supports a variety of mostly non-standard flags (called Expressions in OpenUTAU):
