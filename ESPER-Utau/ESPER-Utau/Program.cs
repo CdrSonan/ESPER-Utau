@@ -11,7 +11,6 @@ var arguments = Environment.GetCommandLineArgs();
 var argParser = new ArgParser(arguments);
 var configParser = new ConfigParser(Path.GetDirectoryName(argParser.InputPath), argParser.RsmpDir);
 var (esperAudio, sampleRate) = EsperWrapper.LoadOrCreate(argParser.InputPath, configParser);
-
 var length = (int)(argParser.Length * sampleRate / configParser.StepSize / 1000);
 var consonant = (int)(argParser.Consonant * sampleRate / configParser.StepSize / 1000);
 var offset = (int)(argParser.Offset * sampleRate / configParser.StepSize / 1000);
@@ -39,6 +38,8 @@ if (length <= consonant + 1)
 
 // Create parameter arrays
 var breathiness = MakeParamArray(argParser, "B", 0.0f, length);
+breathiness *= 1.5f;
+breathiness -= 0.5f;
 var brightness = MakeParamArray(argParser, "bri", 0.0f, length);
 var dynamic = MakeParamArray(argParser, "dyn", 0.0f, length);
 var formantShift = MakeParamArray(argParser, "g", 0.0f, length);
@@ -75,10 +76,10 @@ var resampledVowelAudio = overlap == 0.0f ?
 var outputAudio = CutCombine.Concat(consonantAudio, resampledVowelAudio);
 
 var oldPitch = outputAudio.GetPitch();
-oldPitch -= (float)oldPitch.Mean();
+oldPitch -= (float)oldPitch.Median();
 if (argParser.Flags.TryGetValue("stb", out var stability))
 {
-    oldPitch *= stability / 100.0f + 1.0f;
+    oldPitch *= -stability / 100.0f + 1.0f;
 }
 resampledPitch += oldPitch;
 

@@ -63,10 +63,10 @@ expressions:
     is_flag: true
     flag: gro
   bre:
-    name: breathiness
+    name: breath
     abbr: bre
     type: Numerical
-    min: -100
+    min: 0
     max: 100
     default_value: 0
     is_flag: true
