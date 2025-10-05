@@ -41,7 +41,7 @@ public static class EsperWrapper
         if (config.UseFrq && File.Exists(frqFilename))
         {
             var frq = new FrqParser(frqFilename);
-            expectedPitch = frq.F0Mean;
+            expectedPitch = sampleRate / frq.F0Mean;
         }
         
         // read audio file

@@ -97,7 +97,7 @@ public class ArgParser
                     pitch--;
                     break;
             }
-            return pitch + (octave + 1) * 12; // MIDI pitch starts at C-1 (MIDI note 0)
+            return pitch + octave * 12;
         }
         else
         {

@@ -1,4 +1,5 @@
 ﻿
+using System.ComponentModel;
 using ESPER_Utau;
 using libESPER_V2.Effects;
 using libESPER_V2.Transforms;
@@ -27,13 +28,26 @@ else
 }
 vowel -= consonant;
 
-if (vowel <= 1)
+if (vowel <= 2)
 {
-    vowel = 2;
+    Console.WriteLine("WARNING: oto.ini vowel length is below 3 frames. Extending to minimum viable size.");
+    vowel = 3;
 }
-if (length <= consonant + 1)
+if (length <= consonant + 2)
 {
-    length = consonant + 2;
+    Console.WriteLine("WARNING: requested length is shorter than oto.ini consonant length. The resampled file will be longer than requested.");
+    length = consonant + 3;
+}
+
+if (offset + consonant + vowel > esperAudio.Length)
+{
+    Console.WriteLine("WARNING: oto.ini cutoff is beyond audio file end. Reducing offset to compensate.");
+    offset -= esperAudio.Length - offset - consonant - vowel;
+}
+
+if (offset < 0)
+{
+    throw new Exception("Adjustment to invalid oto.ini parameters failed");
 }
 
 // Create parameter arrays
