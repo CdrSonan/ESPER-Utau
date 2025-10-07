@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace ESPER_Utau;
 
 public class FrqParser
@@ -62,7 +64,7 @@ public class FrqWriter
         try
         {
             // Write header
-            bw.Write("FREQ0003".ToCharArray());
+            bw.Write("FREQ0003"u8.ToArray());
             bw.Write(256); // samples per frq
             bw.Write(f0Mean); // average frequency
 
