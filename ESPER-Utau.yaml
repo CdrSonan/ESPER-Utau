@@ -8,15 +8,6 @@ expressions:
     default_value: 0
     is_flag: true
     flag: ovl
-  stb:
-    name: pitch stability
-    abbr: stb
-    type: Numerical
-    min: -100
-    max: 100
-    default_value: 0
-    is_flag: true
-    flag: stb
   std:
     name: steadiness
     abbr: std

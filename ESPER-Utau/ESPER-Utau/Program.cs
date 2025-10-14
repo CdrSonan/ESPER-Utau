@@ -65,7 +65,7 @@ var overlap = argParser.Flags.TryGetValue("ovl", out var overlapFlag) ? (float)(
 
 var pitchArr = new double[argParser.PitchBend.Length];
 var scale = Vector<double>.Build.Dense(argParser.PitchBend.Length, i => i);
-var newScale = Vector<double>.Build.Dense(length, i => double.Min(i * 307.2 * argParser.Tempo / sampleRate, argParser.PitchBend.Length - 1));
+var newScale = Vector<double>.Build.Dense(length, i => double.Min(i * 1.6 * configParser.StepSize * argParser.Tempo / sampleRate, argParser.PitchBend.Length - 1));
 double basePitch;
 if (argParser.Flags.TryGetValue("t", out var tFlag))
 {
@@ -90,11 +90,8 @@ var resampledVowelAudio = overlap == 0.0f ?
 var outputAudio = CutCombine.Concat(consonantAudio, resampledVowelAudio);
 
 var oldPitch = outputAudio.GetPitch();
-oldPitch -= (float)oldPitch.Median();
-if (argParser.Flags.TryGetValue("stb", out var stability))
-{
-    oldPitch *= -stability / 100.0f + 1.0f;
-}
+oldPitch -= oldPitch.Median();
+oldPitch *= (float)argParser.Modulation / 100.0f;
 resampledPitch += oldPitch;
 
 // Apply effects
@@ -108,6 +105,8 @@ Effects.Roughness(outputAudio, roughness);
 Effects.Growl(outputAudio, growl);
 
 var (outputWave, _) = EsperTransforms.Inverse(outputAudio);
+
+outputWave *= (float)argParser.Volume / 100;
 
 using var writer = new WaveFileWriter(argParser.OutputPath, WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1));
 writer.WriteSamples(outputWave.ToArray(), 0, outputWave.Count);
