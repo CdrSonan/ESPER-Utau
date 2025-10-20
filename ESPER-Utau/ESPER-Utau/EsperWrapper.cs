@@ -36,12 +36,16 @@ public static class EsperWrapper
             }
         }
 
-        var expectedPitch = config.ExpPitch;
+        Vector<float>? expectedPitch = null;
+        if (config.ExpPitch != null)
+        {
+            expectedPitch = Vector<float>.Build.Dense(1, (float)config.ExpPitch);
+        }
         // .esp file not found - run forward transform
         if (config.UseFrq && File.Exists(frqFilename))
         {
             var frq = new FrqParser(frqFilename);
-            expectedPitch = sampleRate / frq.F0Mean;
+            expectedPitch = sampleRate / Vector<float>.Build.DenseOfArray(frq.F0);
         }
         
         // read audio file

@@ -1,5 +1,4 @@
 ﻿
-using System.ComponentModel;
 using ESPER_Utau;
 using libESPER_V2.Effects;
 using libESPER_V2.Transforms;
@@ -52,8 +51,8 @@ if (offset < 0)
 
 // Create parameter arrays
 var breathiness = MakeParamArray(argParser, "B", 0.0f, length);
-breathiness *= 1.5f;
-breathiness -= 0.5f;
+// breathiness *= 1.5f;
+// breathiness -= 0.5f;
 var brightness = MakeParamArray(argParser, "bri", 0.0f, length);
 var dynamic = MakeParamArray(argParser, "dyn", 0.0f, length);
 var formantShift = MakeParamArray(argParser, "g", 0.0f, length);
@@ -91,7 +90,7 @@ var outputAudio = CutCombine.Concat(consonantAudio, resampledVowelAudio);
 
 var oldPitch = outputAudio.GetPitch();
 oldPitch -= oldPitch.Median();
-oldPitch *= (float)argParser.Modulation / 100.0f;
+//oldPitch *= (float)argParser.Modulation / 100.0f;
 resampledPitch += oldPitch;
 
 // Apply effects
