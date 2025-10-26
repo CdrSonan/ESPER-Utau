@@ -46,6 +46,7 @@ public static class EsperWrapper
         {
             var frq = new FrqParser(frqFilename);
             expectedPitch = sampleRate / Vector<float>.Build.DenseOfArray(frq.F0);
+            expectedPitch.MapIndexedInplace((i, val) => frq.F0[i] == 0 ? 0 : val);
         }
         
         // read audio file
