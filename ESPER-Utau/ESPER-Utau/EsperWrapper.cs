@@ -88,7 +88,7 @@ public static class EsperWrapper
                 var ampsInterpolator = new StepInterpolation(scale.ToArray(), amplitudes.ToDouble().ToArray());
                 var resampledF0 = new double[newCount];
                 var resampledAmps = new double[newCount];
-                for (int i = 0; i < newCount; i++)
+                for (var i = 0; i < newCount; i++)
                 {
                     resampledF0[i] = f0Interpolator.Interpolate(newScale[i]);
                     resampledAmps[i] = ampsInterpolator.Interpolate(newScale[i]);
