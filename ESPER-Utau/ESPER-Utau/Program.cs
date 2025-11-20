@@ -107,7 +107,7 @@ var (outputWave, _) = EsperTransforms.Inverse(outputAudio);
 
 outputWave *= (float)argParser.Volume / 100;
 
-using var writer = new WaveFileWriter(argParser.OutputPath, WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1));
+using var writer = new WaveFileWriter(argParser.OutputPath, new WaveFormat(sampleRate, 16, 1));
 writer.WriteSamples(outputWave.ToArray(), 0, outputWave.Count);
 
 return;
