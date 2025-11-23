@@ -90,7 +90,7 @@ var outputAudio = CutCombine.Concat(consonantAudio, resampledVowelAudio);
 
 var oldPitch = outputAudio.GetPitch();
 oldPitch -= oldPitch.Median();
-//oldPitch *= (float)argParser.Modulation / 100.0f;
+oldPitch *= (float)argParser.Modulation / 100.0f;
 resampledPitch += oldPitch;
 
 // Apply effects
