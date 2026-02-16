@@ -51,8 +51,6 @@ if (offset < 0)
 
 // Create parameter arrays
 var breathiness = MakeParamArray(argParser, "B", 0.0f, length);
-// breathiness *= 1.5f;
-// breathiness -= 0.5f;
 var brightness = MakeParamArray(argParser, "bri", 0.0f, length);
 var dynamic = MakeParamArray(argParser, "dyn", 0.0f, length);
 var formantShift = MakeParamArray(argParser, "g", 0.0f, length);

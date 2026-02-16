@@ -55,9 +55,7 @@ public static class EsperWrapper
         for (var i = 0; i < waveform.Length; i++)
         {
             var frame = reader.ReadNextSampleFrame();
-            //if (frame == null) break;
-            var sample = frame[0];
-            waveform[i] = sample;
+            waveform[i] = frame[0];
         }
 
         var sampleConfig = new EsperAudioConfig((ushort)config.NVoiced, (ushort)config.NUnvoiced, (int)config.StepSize);
