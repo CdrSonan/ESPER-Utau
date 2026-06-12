@@ -9,14 +9,14 @@ Download the executable matching your platform (Windows/Mac/Linux etc.), esper-c
 esper-config.ini is required for the resampler to function, and ESPER-Utau.yaml provides expression definitions for OpenUTAU.
 
 ## UTAU - Windows
-To use the resampler with UTAU on Windows, put ESPER-Utau windows.exe and esper-config.ini into the same folder.
-Then, as with other resamplers, select ESPER-Utau windows.exe as the resampler executable in UTAU.
+To use the resampler with UTAU on Windows, put ESPER-Utau.exe and esper-config.ini into the same folder.
+Then, as with other resamplers, select ESPER-Utau.exe as the resampler executable in UTAU.
 
 ## OpenUTAU - All platforms
 To use the resampler with OpenUTAU, navigate to OpenUTAU's data directory and open the folder named "Resamplers".
 Inside the resamplers folder, create a new folder named ESPER-Utau (or any other name of your choosing), and place the executable matching your platform, esper-config.ini, and ESPER-Utau.yaml into it.
 The resampler will then be able for selection in the settings dialogue of all tracks.
-In order for OpenUTAU to automatically recognise the supported expressions, rename the executable to ESPER-Utau.exe if you are on Windows, or just ESPER-Utau on all other platforms.
+In order for OpenUTAU to automatically recognise the supported expressions on platforms other than Windows, rename the executable to **ESPER-Utau** without the platform-specific postfix.
 
 # Flags/Expressions
 ESPER-Utau supports a variety of mostly non-standard flags (called Expressions in OpenUTAU):
