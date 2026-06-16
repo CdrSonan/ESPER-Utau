@@ -19,7 +19,7 @@
 
 
     <ItemGroup>
-      <PackageReference Include="libESPER-V2" Version="2.6.4" />
+      <PackageReference Include="libESPER-V2" Version="2.7.0" />
       <PackageReference Include="NAudio" Version="2.2.1" />
     </ItemGroup>
 

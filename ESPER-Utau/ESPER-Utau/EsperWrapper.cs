@@ -59,7 +59,17 @@ public static class EsperWrapper
         }
 
         var sampleConfig = new EsperAudioConfig((ushort)config.NVoiced, (ushort)config.NUnvoiced, (int)config.StepSize);
-        var forwardConfig = new EsperForwardConfig(config.Smoothing, expectedPitch);
+        var forwardConfig = new EsperForwardConfig
+        {
+            PitchOscillatorDamping = config.PitchOscillatorDamping,
+            ExpectedPitch = expectedPitch,
+            ProcessNoiseVariance = config.ProcessNoiseVariance,
+            MeasurementNoiseVariance = config.MeasurementNoiseVariance,
+            RobustThreshold = config.RobustThreshold,
+            ScaleForgettingFactor = config.ScaleForgettingFactor,
+            InitialVarianceMultiplier = config.InitialVarianceMultiplier,
+            InitialObsStdMultiplier = config.InitialObsStdMultiplier
+        };
         
         var esperAudio = EsperTransforms.Forward(
             Vector<float>.Build.DenseOfArray(waveform),

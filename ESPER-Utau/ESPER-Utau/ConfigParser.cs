@@ -16,7 +16,13 @@ public class ConfigParser
     public readonly long NUnvoiced;
     public readonly long StepSize;
     public readonly float? ExpPitch;
-    public readonly float? Smoothing;
+    public readonly float? PitchOscillatorDamping;
+    public readonly double ProcessNoiseVariance;
+    public readonly double MeasurementNoiseVariance;
+    public readonly double RobustThreshold;
+    public readonly double ScaleForgettingFactor;
+    public readonly double InitialVarianceMultiplier;
+    public readonly double InitialObsStdMultiplier;
     
     /// <summary>
     /// Initializes a new instance of the <see cref="ConfigParser"/> class, and fills its attributes with the read config values.
@@ -38,6 +44,14 @@ public class ConfigParser
             }
             path = fallbackPath;
         }
+        
+        // Initialize with default values
+        ProcessNoiseVariance = 0.01;
+        MeasurementNoiseVariance = 0.1;
+        RobustThreshold = 2.5;
+        ScaleForgettingFactor = 0.05;
+        InitialVarianceMultiplier = 1.0;
+        InitialObsStdMultiplier = 0.5;
         
         var config = LoadConfig(path);
         foreach (var kvp in config)
@@ -76,8 +90,26 @@ public class ConfigParser
                 case "exppitch":
                     ExpPitch = value == "null" ? null : float.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
                     break;
-                case "smoothing":
-                    Smoothing = value == "null" ? null : float.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+                case "pitchoscillatordamping":
+                    PitchOscillatorDamping = value == "null" ? null : float.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case "processnoisevariance":
+                    ProcessNoiseVariance = double.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case "measurementnoisevariance":
+                    MeasurementNoiseVariance = double.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case "robustthreshold":
+                    RobustThreshold = double.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case "scaleforgettingfactor":
+                    ScaleForgettingFactor = double.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case "initialvariancemultiplier":
+                    InitialVarianceMultiplier = double.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case "initialobsstdmultiplier":
+                    InitialObsStdMultiplier = double.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 default:
                     Console.WriteLine($"WARNING: Unknown configuration key: {key}");
